@@ -6,7 +6,7 @@
 use crate::error::{PrismError, PrismResult};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use stellar_xdr::curr::{
-    DiagnosticEvent, LedgerEntry, Limits, ReadXdr, TransactionEnvelope, TransactionMeta, 
+    DiagnosticEvent, LedgerEntry, Limits, ReadXdr, ScVec, TransactionEnvelope, TransactionMeta,
     WriteXdr, TransactionResult,
 };
 
@@ -116,6 +116,25 @@ impl XdrCodec for DiagnosticEvent {
 
     fn from_xdr_bytes(bytes: &[u8]) -> PrismResult<Self> {
         DiagnosticEvent::from_xdr(bytes, Limits::none()).map_err(|e| {
+            PrismError::XdrDecodingFailed {
+                type_name: Self::TYPE_NAME,
+                reason: e.to_string(),
+            }
+        })
+    }
+
+    fn to_xdr_bytes(&self) -> PrismResult<Vec<u8>> {
+        self.to_xdr(Limits::none()).map_err(|e| {
+            PrismError::XdrError(format!("Failed to encode {}: {}", Self::TYPE_NAME, e))
+        })
+    }
+}
+
+impl XdrCodec for ScVec {
+    const TYPE_NAME: &'static str = "ScVec";
+
+    fn from_xdr_bytes(bytes: &[u8]) -> PrismResult<Self> {
+        ScVec::from_xdr(bytes, Limits::none()).map_err(|e| {
             PrismError::XdrDecodingFailed {
                 type_name: Self::TYPE_NAME,
                 reason: e.to_string(),
@@ -266,6 +285,19 @@ mod tests {
         let b64 = crate::xdr::codec::XdrCodec::to_xdr_base64(&event).expect("encode");
         let decoded = <DiagnosticEvent as crate::xdr::codec::XdrCodec>::from_xdr_base64(&b64).expect("decode");
         assert_eq!(event, decoded);
+    }
+
+    #[test]
+    fn test_scvec_round_trip() {
+        let scvec = ScVec(vec![
+            stellar_xdr::curr::ScVal::Void,
+            stellar_xdr::curr::ScVal::Bool(true),
+            stellar_xdr::curr::ScVal::U32(42),
+        ].try_into().unwrap());
+
+        let b64 = crate::xdr::codec::XdrCodec::to_xdr_base64(&scvec).expect("encode");
+        let decoded = <ScVec as crate::xdr::codec::XdrCodec>::from_xdr_base64(&b64).expect("decode");
+        assert_eq!(scvec, decoded);
     }
 }
 
