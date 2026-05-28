@@ -101,6 +101,14 @@ pub enum PrismError {
     /// Generic internal error.
     #[error("Internal error: {0}")]
     Internal(String),
+
+    /// The transaction result XDR does not contain an InvokeHostFunction operation.
+    #[error("Not a Soroban transaction: no InvokeHostFunction operation found")]
+    NotSorobanTransaction,
+
+    /// The transaction succeeded — there is no error to decode.
+    #[error("Transaction succeeded — no error to decode")]
+    TransactionSucceeded,
 }
 
 /// Convenience Result type for Prism operations.
