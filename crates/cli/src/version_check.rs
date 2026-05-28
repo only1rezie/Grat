@@ -38,7 +38,6 @@ async fn check_for_updates_internal() -> anyhow::Result<Option<String>> {
     let cache_path =
         cache_file_path().ok_or_else(|| anyhow::anyhow!("No cache directory found"))?;
 
-    // 1. Read cache and return early if check happened < 24 hours ago
     if let Ok(content) = fs::read_to_string(&cache_path) {
         if let Ok(cache) = serde_json::from_str::<VersionCache>(&content) {
             let now = Utc::now();
@@ -48,7 +47,6 @@ async fn check_for_updates_internal() -> anyhow::Result<Option<String>> {
         }
     }
 
-    // 2. Fetch the latest release from GitHub
     let client = Client::builder()
         .user_agent("prism-cli-updater")
         .timeout(Duration::from_secs(2))
@@ -62,10 +60,8 @@ async fn check_for_updates_internal() -> anyhow::Result<Option<String>> {
 
     let release: GitHubRelease = response.json().await?;
 
-    // 3. Process the version tag (strip 'v' prefix if present)
     let latest_version = release.tag_name.trim_start_matches('v').to_string();
 
-    // 4. Update the cache file
     if let Some(parent) = cache_path.parent() {
         let _ = fs::create_dir_all(parent);
     }
@@ -79,7 +75,6 @@ async fn check_for_updates_internal() -> anyhow::Result<Option<String>> {
         let _ = fs::write(&cache_path, serialized);
     }
 
-    // 5. Compare with the current binary version
     Ok(compare_versions(&latest_version))
 }
 

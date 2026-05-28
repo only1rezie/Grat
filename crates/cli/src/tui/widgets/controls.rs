@@ -4,5 +4,4 @@
 
 /// Render the debugger controls bar in the TUI.
 pub fn render() {
-    // TODO: Render step control buttons
 }

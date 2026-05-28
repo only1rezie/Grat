@@ -1,4 +1,3 @@
-// Prism VS Code Extension — entry point
 import * as vscode from "vscode";
 import { registerDiagnostics } from "./providers/diagnostics";
 import { registerHoverProvider } from "./providers/hover";
@@ -13,7 +12,6 @@ export function activate(context: vscode.ExtensionContext) {
   registerCodeLens(context);
   registerQuickFix(context);
 
-  // Register decode command
   context.subscriptions.push(
     vscode.commands.registerCommand("prism.decode", () => {
       vscode.window.showInformationMessage("Prism: Decode not yet implemented");

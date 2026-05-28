@@ -19,7 +19,6 @@ pub async fn run(_args: CleanArgs, output_format: &str) -> anyhow::Result<()> {
 
     clear_directory_contents(&cache_dir)?;
 
-    // Keep cache directory present after cleanup.
     fs::create_dir_all(&cache_dir).map_err(|e| {
         anyhow::anyhow!(
             "Failed to recreate cache directory {}: {}",

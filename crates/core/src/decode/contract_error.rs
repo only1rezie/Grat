@@ -23,11 +23,9 @@ pub async fn resolve(
 ) -> PrismResult<ContractErrorInfo> {
     Address::validate_contract_id(contract_id)?;
 
-    // 1. Check cache first
     let cache = crate::cache::store::CacheStore::default_location()?;
     let cache_key = format!("{contract_id}_spec");
 
-    // 2. Fetch WASM if not cached
     let wasm_bytes = if let Some(cached) =
         cache.get(crate::cache::store::CacheCategory::WasmBlob, &cache_key)?
     {
@@ -42,10 +40,8 @@ pub async fn resolve(
         wasm
     };
 
-    // 3. Parse contract spec
     let spec = decoder::decode_contract_spec(&wasm_bytes)?;
 
-    // 4. Resolve the error code
     let error_entry = decoder::resolve_error_code(&spec, error_code);
 
     Ok(ContractErrorInfo {
@@ -60,10 +56,8 @@ pub async fn resolve(
 async fn fetch_contract_wasm(contract_id: &str, network: &NetworkConfig) -> PrismResult<Vec<u8>> {
     let rpc = crate::rpc::SorobanRpcClient::new(network);
 
-    // TODO: Build the contract code ledger key and fetch via getLedgerEntries
     let _result = rpc.get_ledger_entries(&[contract_id.to_string()]).await?;
 
-    // TODO: Extract WASM bytes from the ledger entry
     Err(PrismError::ContractNotFound(format!(
         "WASM fetch not yet implemented for {contract_id}"
     )))

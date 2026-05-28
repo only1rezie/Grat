@@ -27,7 +27,6 @@ pub mod taxonomy;
 pub mod types;
 pub mod xdr;
 
-// Re-export key types for convenience
 pub use network::config::Network;
 pub use types::address::Address;
 pub use types::config::NetworkConfig;

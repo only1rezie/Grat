@@ -1,4 +1,3 @@
-// Extension configuration helpers
 import * as vscode from "vscode";
 
 export function getConfig() {

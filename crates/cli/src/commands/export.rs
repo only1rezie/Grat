@@ -30,10 +30,6 @@ pub async fn run(
         );
     }
 
-    // TODO: Generate a self-contained test case from the debug session
-    // - Historical state snapshot
-    // - Transaction inputs
-    // - Expected outcome
 
     let output_path = args.output.unwrap_or_else(|| {
         format!(

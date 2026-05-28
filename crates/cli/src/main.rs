@@ -85,7 +85,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    // --- Analysis Commands ---
     #[command(next_help_heading = "Analysis Commands")]
     /// Decode a transaction error into plain English.
     Decode(commands::decode::DecodeArgs),
@@ -98,7 +97,6 @@ enum Commands {
     /// Show state diff (before/after) for a transaction.
     Diff(commands::diff::DiffArgs),
 
-    // --- Debug & TUI Commands ---
     #[command(next_help_heading = "Debug & TUI Commands")]
     /// Launch interactive TUI debugger.
     Replay(commands::replay::ReplayArgs),
@@ -107,7 +105,6 @@ enum Commands {
     /// Export debug session as a regression test.
     Export(commands::export::ExportArgs),
 
-    // --- System & Data Commands ---
     #[command(next_help_heading = "System & Data Commands")]
     /// Manage the error taxonomy database.
     Db(commands::db::DbArgs),

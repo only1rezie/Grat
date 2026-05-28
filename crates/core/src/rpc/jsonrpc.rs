@@ -7,7 +7,6 @@ use crate::error::{PrismError, PrismResult, JsonRpcError};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
-// ── Wire types ────────────────────────────────────────────────────────────────
 
 /// JSON-RPC 2.0 request envelope.
 ///
@@ -40,7 +39,6 @@ pub struct JsonRpcResponse<T> {
     pub error: Option<JsonRpcError>,
 }
 
-// ── Soroban RPC param/result types ───────────────────────────────────────────
 
 /// Params for `getTransaction`.
 #[derive(Debug, Serialize)]
@@ -75,7 +73,6 @@ pub struct EmptyParams {}
 /// Params for `getHealth` — the method takes no parameters.
 pub type GetHealthParams = EmptyParams;
 
-// ── Transport ─────────────────────────────────────────────────────────────────
 
 /// Low-level JSON-RPC HTTP transport.
 ///

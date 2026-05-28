@@ -11,7 +11,6 @@ export default function TracePage() {
   const [txHash, setTxHash] = useState("");
   const [network, setNetwork] = useState("testnet");
   
-  // WebSocket URL for streaming trace updates
   const wsUrl = typeof window !== "undefined" 
     ? `ws://${window.location.hostname}:8080` 
     : "";

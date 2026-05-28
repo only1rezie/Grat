@@ -75,13 +75,11 @@ async fn login(
 ) -> Result<()> {
     let palette = crate::output::theme::ColorPalette::default();
 
-    // Determine provider name
     let provider = match provider_param {
         Some(p) => p,
         None => select_provider_interactive()?,
     };
 
-    // Prompt for API key securely
     let prompt = format!(
         "Enter your API key for {}: ",
         palette.success_text(&provider)
@@ -93,7 +91,6 @@ async fn login(
         std::process::exit(1);
     }
 
-    // Store the credential
     match store_credential(&provider, &api_key, config_path).await {
         Ok(_) => {
             if matches!(
@@ -131,13 +128,11 @@ async fn logout(
 ) -> Result<()> {
     let palette = crate::output::theme::ColorPalette::default();
 
-    // Determine provider name
     let provider = match provider_param {
         Some(p) => p,
         None => select_provider_for_logout()?,
     };
 
-    // Remove the credential
     match remove_credential(&provider, config_path).await {
         Ok(true) => {
             if matches!(
@@ -216,7 +211,6 @@ fn select_provider_for_logout() -> Result<String> {
         "Custom".to_string(),
     ];
 
-    // Try to load existing credentials to show which providers have stored keys
     if let Ok(config) = load_auth_config(None) {
         for provider in config.credentials.keys() {
             if !items.iter().any(|i| i == provider) {
@@ -253,7 +247,6 @@ async fn store_credential(
 ) -> Result<()> {
     let normalized_provider = normalize_provider_name(provider);
 
-    // Store in config file
     store_credential_config(&normalized_provider, api_key, config_path).await
 }
 
@@ -273,7 +266,6 @@ async fn store_credential_config(
 
     save_auth_config(&config, &config_file).await?;
 
-    // Set secure file permissions on Unix systems
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -289,7 +281,6 @@ async fn store_credential_config(
 async fn remove_credential(provider: &str, config_path: Option<String>) -> Result<bool> {
     let normalized_provider = normalize_provider_name(provider);
 
-    // Remove from config file
     let config_file = get_config_path(config_path)?;
     if let Ok(mut config) = load_auth_config(Some(&config_file)) {
         if config
@@ -310,7 +301,6 @@ async fn remove_credential(provider: &str, config_path: Option<String>) -> Resul
 pub fn get_credential(provider: &str) -> Result<Option<String>> {
     let normalized_provider = normalize_provider_name(provider);
 
-    // Get from config file
     get_credential_config(&normalized_provider)
 }
 
@@ -346,7 +336,6 @@ fn load_auth_config(config_file: Option<&PathBuf>) -> Result<AuthConfig> {
 
 /// Save auth configuration to file.
 async fn save_auth_config(config: &AuthConfig, config_file: &PathBuf) -> Result<()> {
-    // Create parent directory if it doesn't exist
     if let Some(parent) = config_file.parent() {
         fs::create_dir_all(parent)?;
     }
@@ -399,7 +388,6 @@ mod tests {
         let provider = "test-provider";
         let api_key = "test-api-key-123";
 
-        // Store credential
         let mut config = AuthConfig::default();
         config
             .credentials
@@ -408,14 +396,12 @@ mod tests {
         let content = toml::to_string_pretty(&config).unwrap();
         fs::write(&config_path, content).unwrap();
 
-        // Retrieve credential from the same temp config file
         let loaded = load_auth_config(Some(&config_path)).unwrap();
         assert_eq!(loaded.credentials.get(provider), Some(&api_key.to_string()));
     }
 
     #[test]
     fn test_empty_key_is_rejected() {
-        // This test verifies the validation logic
         let empty_key = "";
         assert!(empty_key.trim().is_empty());
 
@@ -447,11 +433,9 @@ mod tests {
             .credentials
             .insert("test".to_string(), "key123".to_string());
 
-        // Save config
         save_auth_config(&config, &config_path).await.unwrap();
         assert!(config_path.exists());
 
-        // Load config
         let loaded = load_auth_config(Some(&config_path)).unwrap();
         assert_eq!(loaded.credentials.get("test"), Some(&"key123".to_string()));
     }

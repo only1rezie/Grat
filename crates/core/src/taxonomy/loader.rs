@@ -35,7 +35,6 @@ impl TaxonomyDatabase {
             all_entries: Vec::new(),
         };
 
-        // Load each category file
         let categories = [
             ("budget", include_str!("data/budget.toml")),
             ("storage", include_str!("data/storage.toml")),

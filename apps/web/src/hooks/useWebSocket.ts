@@ -1,4 +1,3 @@
-// WebSocket hook for streaming trace data during replay
 import { useEffect, useRef, useState, useCallback } from "react";
 
 export interface TraceNode {

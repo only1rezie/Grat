@@ -1,4 +1,3 @@
-// Hook for execution trace via backend API with WebSocket streaming support
 import { useState, useCallback } from "react";
 import { useWebSocket, TraceStreamCallbacks } from "./useWebSocket";
 
@@ -90,12 +89,9 @@ export function useTrace(wsUrl?: string) {
   const requestTrace = useCallback(
     (txHash: string, network: string) => {
       if (wsUrl && connected) {
-        // Use WebSocket streaming
         wsRequestTrace(txHash);
       } else {
-        // Fallback to REST API
         setLoading(true);
-        // TODO: Call backend replay API
         setLoading(false);
       }
     },

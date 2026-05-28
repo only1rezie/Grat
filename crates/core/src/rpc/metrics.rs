@@ -25,7 +25,6 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
-// ── Histogram bucket boundaries ───────────────────────────────────────────────
 
 /// Standard Prometheus HTTP latency bucket upper bounds (seconds).
 ///
@@ -35,7 +34,6 @@ const BUCKETS: &[f64] = &[
     0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
 ];
 
-// ── Per-method histogram ──────────────────────────────────────────────────────
 
 /// Cumulative histogram for a single `(method, outcome)` combination.
 #[derive(Debug)]
@@ -67,8 +65,6 @@ impl Histogram {
         self.count += 1;
         self.sum += value;
 
-        // Increment every bucket whose upper bound is ≥ the observed value.
-        // This produces the cumulative counts required by Prometheus.
         for (i, &bound) in BUCKETS.iter().enumerate() {
             if value <= bound {
                 self.bucket_counts[i] += 1;
@@ -81,7 +77,6 @@ impl Histogram {
         let mut cumulative = 0u64;
 
         for (i, &bound) in BUCKETS.iter().enumerate() {
-            // Each bucket is cumulative: add running total.
             cumulative += self.bucket_counts[i];
             out.push_str(&format!(
                 "rpc_request_duration_seconds_bucket\
@@ -89,7 +84,6 @@ impl Histogram {
             ));
         }
 
-        // +Inf bucket always equals the total count.
         out.push_str(&format!(
             "rpc_request_duration_seconds_bucket\
              {{method=\"{method}\",outcome=\"{outcome}\",le=\"+Inf\"}} {}\n",
@@ -108,7 +102,6 @@ impl Histogram {
     }
 }
 
-// ── Registry ──────────────────────────────────────────────────────────────────
 
 /// Global registry that stores one histogram per `(method, outcome)` pair.
 ///
@@ -147,13 +140,11 @@ impl RpcMetricsRegistry {
         );
         out.push_str("# TYPE rpc_request_duration_seconds histogram\n");
 
-        // Sort keys for stable output order.
         let mut keys: Vec<&String> = self.histograms.keys().collect();
         keys.sort();
 
         for key in keys {
             let hist = &self.histograms[key];
-            // Key format is "<method>:<outcome>".
             let (method, outcome) = key
                 .split_once(':')
                 .unwrap_or((key.as_str(), "unknown"));
@@ -164,7 +155,6 @@ impl RpcMetricsRegistry {
     }
 }
 
-// ── Global singleton ──────────────────────────────────────────────────────────
 
 /// Process-wide metrics registry, initialised on first access.
 static REGISTRY: OnceLock<Mutex<RpcMetricsRegistry>> = OnceLock::new();
@@ -174,7 +164,6 @@ fn registry() -> &'static Mutex<RpcMetricsRegistry> {
     REGISTRY.get_or_init(|| Mutex::new(RpcMetricsRegistry::default()))
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
 
 /// Record the duration of a single RPC round-trip in the global registry.
 ///
@@ -217,13 +206,11 @@ pub fn gather() -> String {
         .unwrap_or_default()
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    // ── Histogram unit tests ──────────────────────────────────────────────────
 
     #[test]
     fn histogram_starts_empty() {
@@ -247,12 +234,8 @@ mod tests {
     #[test]
     fn histogram_buckets_are_cumulative() {
         let mut h = Histogram::new();
-        // Observe a value that falls in the 0.1 s bucket.
         h.observe(0.08);
 
-        // BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.1, ...]
-        // indices:     0      1     2      3    4
-        // 0.08 <= 0.1 (index 4), but NOT <= 0.05 (index 3).
         let idx_005  = 0;
         let idx_01   = 1;
         let idx_025  = 2;
@@ -284,7 +267,6 @@ mod tests {
         assert_eq!(h.count, 1, "+Inf bucket == count");
     }
 
-    // ── Registry unit tests ───────────────────────────────────────────────────
 
     #[test]
     fn registry_separates_success_and_error() {
@@ -306,7 +288,6 @@ mod tests {
         assert_eq!(reg.histograms.len(), 2);
     }
 
-    // ── gather() / Prometheus format tests ───────────────────────────────────
 
     #[test]
     fn gather_contains_help_and_type_lines() {
@@ -335,7 +316,6 @@ mod tests {
         reg.record("getLedgerEntries", 1.2, true);
 
         let output = reg.gather();
-        // +Inf bucket must equal 3 (total count)
         assert!(
             output.contains(
                 "rpc_request_duration_seconds_bucket\
@@ -367,19 +347,15 @@ mod tests {
         );
     }
 
-    // ── Public API smoke tests ────────────────────────────────────────────────
 
     #[test]
     fn record_rpc_duration_does_not_panic() {
-        // Exercise the global singleton without asserting on shared state.
         record_rpc_duration("getLatestLedger", 0.042, true);
         record_rpc_duration("getLatestLedger", 1.500, false);
     }
 
     #[test]
     fn global_gather_returns_prometheus_header() {
-        // Ensure gather() on the global registry doesn't panic and returns
-        // the expected HELP line.
         let output = gather();
         assert!(output.contains("# HELP rpc_request_duration_seconds"));
     }

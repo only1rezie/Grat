@@ -4,5 +4,4 @@
 
 /// Render the state inspector panel in the TUI.
 pub fn render() {
-    // TODO: Render storage and state inspection panel
 }

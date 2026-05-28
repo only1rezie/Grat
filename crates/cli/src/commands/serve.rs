@@ -59,23 +59,19 @@ pub async fn run(args: ServeArgs, network: &NetworkConfig) -> anyhow::Result<()>
     let network = Arc::new(network.clone());
     let addr: SocketAddr = format!("{}:{}", args.host, args.port).parse()?;
 
-    // Initialize API Bridge Router
     let api_router = Router::new()
         .route("/trace/:tx_hash", get(get_trace_api))
         .with_state(Arc::clone(&network));
 
-    // Initialize Static File Server
     let static_dir = get_static_assets_path();
     let static_service = if static_dir.exists() {
         tracing::info!("Serving web app from {}", static_dir.display());
         ServeDir::new(static_dir)
     } else {
         tracing::warn!("Web app assets not found at {}. Serving placeholder.", static_dir.display());
-        // Simple placeholder service could be here
         ServeDir::new(".") // Fallback to current dir for now
     };
 
-    // Main Router
     let app = Router::new()
         .route("/", get(index_handler))
         .nest("/api", api_router)

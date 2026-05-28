@@ -15,7 +15,6 @@ pub fn enrich_report(
     report: &mut DiagnosticReport,
     tx_data: &serde_json::Value,
 ) -> PrismResult<()> {
-    // Extract diagnostic events from the transaction result metadata
     if let Some(events) = tx_data.get("diagnosticEvents").and_then(|e| e.as_array()) {
         for event in events {
             if let Some(event_type) = event.get("type").and_then(|t| t.as_str()) {
@@ -36,18 +35,15 @@ pub fn enrich_report(
 
 /// Analyze a budget-related diagnostic event.
 fn analyze_budget_event(report: &mut DiagnosticReport, event: &serde_json::Value) {
-    // TODO: Extract CPU vs memory budget details
     let _ = (report, event);
 }
 
 /// Analyze a storage-related diagnostic event.
 fn analyze_storage_event(report: &mut DiagnosticReport, event: &serde_json::Value) {
-    // TODO: Extract which storage key was accessed/denied
     let _ = (report, event);
 }
 
 /// Analyze an auth-related diagnostic event.
 fn analyze_auth_event(report: &mut DiagnosticReport, event: &serde_json::Value) {
-    // TODO: Extract which auth check failed and what was expected
     let _ = (report, event);
 }

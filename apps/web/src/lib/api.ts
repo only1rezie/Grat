@@ -1,4 +1,3 @@
-// API client for the Prism backend server (Tier 2-3)
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export async function requestReplay(txHash: string, network: string) {

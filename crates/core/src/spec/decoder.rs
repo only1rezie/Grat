@@ -53,7 +53,6 @@ pub struct ContractSpec {
 pub fn decode_contract_spec(wasm_bytes: &[u8]) -> PrismResult<ContractSpec> {
     let _raw_spec = SpecParser::extract_spec(wasm_bytes)?;
 
-    // Parse WASM to find custom sections named "contractspecv0" and "contractmetav0"
     let spec = ContractSpec {
         errors: Vec::new(),
         functions: Vec::new(),
@@ -61,8 +60,6 @@ pub fn decode_contract_spec(wasm_bytes: &[u8]) -> PrismResult<ContractSpec> {
         version: None,
     };
 
-    // TODO: Actually decode the raw_spec into ContractSpec
-    // This will be implemented in a future PR.
     
     Ok(spec)
 }
@@ -131,21 +128,16 @@ mod tests {
 
     #[test]
     fn test_extract_spec_success() {
-        // Minimal WASM with contractspecv0 custom section
-        // Header: \0asm\1\0\0\0
-        // Custom section: id=0, payload_len=..., name_len=14, name="contractspecv0", data=[1, 2, 3]
         let mut wasm = vec![0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00];
         let section_name = "contractspecv0";
         let section_data = vec![1, 2, 3, 4];
         
         let mut custom_payload = Vec::new();
-        // Name length as leb128 (14 is 0x0E)
         custom_payload.push(section_name.len() as u8);
         custom_payload.extend_from_slice(section_name.as_bytes());
         custom_payload.extend_from_slice(&section_data);
         
         wasm.push(0); // Custom section ID
-        // Section length as leb128
         wasm.push(custom_payload.len() as u8);
         wasm.extend(custom_payload);
 

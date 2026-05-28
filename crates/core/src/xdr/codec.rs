@@ -34,7 +34,6 @@ pub trait XdrCodec: Sized {
     }
 }
 
-// ── Trait Implementations ───────────────────────────────────────────────────
 
 impl XdrCodec for TransactionMeta {
     const TYPE_NAME: &'static str = "TransactionMeta";
@@ -131,7 +130,6 @@ impl XdrCodec for DiagnosticEvent {
     }
 }
 
-// ── Low-level helpers ───────────────────────────────────────────────────────
 
 /// Decode a base64-encoded XDR string to raw bytes.
 pub fn decode_xdr_base64(xdr_base64: &str) -> PrismResult<Vec<u8>> {
@@ -162,7 +160,6 @@ pub fn decode_tx_hash(hash_hex: &str) -> PrismResult<[u8; 32]> {
     Ok(arr)
 }
 
-// ── Tests ───────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -242,8 +239,6 @@ mod tests {
 
     #[test]
     fn test_transaction_result_round_trip() {
-        // Minimal valid TransactionResult: feeCharged=0, txSUCCESS=0, results=[], ext=V0
-        // 8 bytes (fee), 4 bytes (code), 4 bytes (results len), 4 bytes (ext)
         let xdr_bytes = vec![0u8; 20];
         let bytes = encode_xdr_base64(&xdr_bytes);
         
@@ -274,7 +269,6 @@ mod tests {
     }
 }
 
-// ── Internal helpers ──────────────────────────────────────────────────────────
 
 fn hex_decode(input: &str) -> Result<Vec<u8>, String> {
     if input.len() % 2 != 0 {

@@ -26,7 +26,6 @@ pub struct ClassifiedError {
 /// Extracts the error category, code, and determines whether it's a host error
 /// or a contract-defined error.
 pub fn classify_error(tx_data: &serde_json::Value) -> PrismResult<ClassifiedError> {
-    // Extract the result status
     let status = tx_data
         .get("status")
         .and_then(|s| s.as_str())
@@ -38,8 +37,6 @@ pub fn classify_error(tx_data: &serde_json::Value) -> PrismResult<ClassifiedErro
         ));
     }
 
-    // TODO: Parse the TransactionResult XDR to extract the specific error
-    // For now, return a placeholder classified error
 
     Ok(ClassifiedError {
         category: ErrorCategory::Contract,

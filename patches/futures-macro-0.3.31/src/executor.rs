@@ -17,7 +17,6 @@ pub(crate) fn test(args: TokenStream, item: TokenStream) -> TokenStream {
             .into();
     }
 
-    // If type mismatch occurs, the current rustc points to the last statement.
     let (last_stmt_start_span, last_stmt_end_span) = {
         let mut last_stmt = input
             .block

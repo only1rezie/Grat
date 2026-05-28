@@ -11,7 +11,6 @@ use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
-// ── simulateTransaction response types ──────────────────────────────────────
 
 /// Ledger footprint returned by `simulateTransaction`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -189,8 +188,6 @@ impl SorobanRpcClient {
             PrismError::RpcError(format!("Failed to parse simulateTransaction response: {e}"))
         })?;
 
-        // Surface simulation-level errors as a proper Rust error so callers
-        // don't need to inspect the struct themselves.
         if let Some(ref err) = response.error {
             return Err(PrismError::RpcError(format!(
                 "simulateTransaction failed: {err}"
@@ -569,7 +566,6 @@ mod tests {
         let addr = listener.local_addr().unwrap();
         let rpc_url = format!("http://{}", addr);
 
-        // Set a 1s timeout in config
         let config = NetworkConfig {
             network: crate::network::Network::Testnet,
             rpc_url,
@@ -582,7 +578,6 @@ mod tests {
 
         tokio::spawn(async move {
             while let Ok((_socket, _)) = listener.accept().await {
-                // Sleep for 2s to trigger timeout
                 tokio::time::sleep(Duration::from_secs(2)).await;
             }
         });
@@ -592,7 +587,6 @@ mod tests {
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
         println!("Error message: {}", err_msg);
-        // reqwest timeout error message usually contains "timeout"
         assert!(
             err_msg.to_lowercase().contains("timeout") || err_msg.to_lowercase().contains("error sending request"),
             "Actual error: {}", err_msg

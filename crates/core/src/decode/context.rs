@@ -34,7 +34,6 @@ pub fn enrich_report(
 
 /// Extract the called function name from the transaction envelope.
 fn extract_function_name(tx_data: &serde_json::Value) -> Option<String> {
-    // TODO: Decode the InvokeHostFunction operation to extract the function name
     tx_data
         .get("functionName")
         .and_then(|f| f.as_str())
@@ -43,7 +42,6 @@ fn extract_function_name(tx_data: &serde_json::Value) -> Option<String> {
 
 /// Extract and decode function arguments.
 fn extract_arguments(tx_data: &serde_json::Value) -> Vec<String> {
-    // TODO: Decode SCVal arguments using contractspec type information
     tx_data
         .get("arguments")
         .and_then(|a| a.as_array())
@@ -53,7 +51,6 @@ fn extract_arguments(tx_data: &serde_json::Value) -> Vec<String> {
 
 /// Extract fee breakdown from the transaction.
 fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
-    // TODO: Parse actual fee components from the transaction
     FeeBreakdown {
         inclusion_fee: tx_data
             .get("inclusionFee")
@@ -76,7 +73,6 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
 
 /// Extract resource usage summary.
 fn extract_resource_summary(_tx_data: &serde_json::Value) -> ResourceSummary {
-    // TODO: Parse actual resource usage from the transaction result
     ResourceSummary {
         cpu_instructions_used: 0,
         cpu_instructions_limit: 0,

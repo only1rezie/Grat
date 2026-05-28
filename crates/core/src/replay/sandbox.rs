@@ -61,10 +61,6 @@ pub async fn execute_with_tracing(
     _state: &LedgerState,
     _tx_hash: &str,
 ) -> PrismResult<SandboxResult> {
-    // TODO: Initialize a modified soroban-env-host with tracing hooks
-    // TODO: Load the reconstructed state into the host
-    // TODO: Replay the transaction operations
-    // TODO: Collect all trace events
 
     tracing::info!("Sandbox execution with tracing — not yet implemented");
 
