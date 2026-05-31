@@ -39,8 +39,6 @@ pub fn select_biased_internal(input: TokenStream) -> TokenStream {
     crate::select::select_biased(input)
 }
 
-// TODO: Change this to doc comment once rustdoc bug fixed: https://github.com/rust-lang/futures-rs/pull/2435
-// The `test` attribute.
 #[proc_macro_attribute]
 pub fn test_internal(input: TokenStream, item: TokenStream) -> TokenStream {
     crate::executor::test(input, item)

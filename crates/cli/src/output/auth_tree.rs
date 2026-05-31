@@ -27,7 +27,6 @@ mod box_chars {
 pub fn render_auth_tree(trace: &ExecutionTrace) -> anyhow::Result<String> {
     let mut output = String::new();
 
-    // Header
     writeln!(output, "{} Authorization Tree", icons::CONTRACT)?;
     writeln!(output, "Transaction: {}", trace.tx_hash)?;
     writeln!(
@@ -37,7 +36,6 @@ pub fn render_auth_tree(trace: &ExecutionTrace) -> anyhow::Result<String> {
     )?;
     writeln!(output)?;
 
-    // Render each root invocation
     for (i, invocation) in trace.invocations.iter().enumerate() {
         let is_last = i == trace.invocations.len().saturating_sub(1);
         render_invocation(&mut output, invocation, "", is_last)?;
@@ -61,7 +59,6 @@ fn render_invocation(
     };
     let child_prefix = if is_last { "    " } else { "│   " };
 
-    // Main invocation line
     let status_icon = if invocation.is_error {
         icons::ERROR
     } else {
@@ -78,7 +75,6 @@ fn render_invocation(
         invocation.function_name
     )?;
 
-    // Arguments
     if !invocation.arguments.is_empty() {
         let args_connector = if is_last { "    " } else { "│   " };
         writeln!(
@@ -103,8 +99,6 @@ fn render_invocation(
         }
     }
 
-    // Auth information (this would need to be added to ContractInvocation struct)
-    // For now, we'll show placeholder auth info
     let auth_prefix = format!("{}{}", current_prefix, child_prefix);
     writeln!(
         output,
@@ -125,7 +119,6 @@ fn render_invocation(
         icons::AUTH_PROVIDED
     )?;
 
-    // Resource usage
     writeln!(output, "{}├─ ⚡ Resources:", auth_prefix)?;
     writeln!(
         output,
@@ -138,7 +131,6 @@ fn render_invocation(
         auth_prefix, invocation.total_memory_bytes
     )?;
 
-    // Sub-invocations
     if !invocation.sub_invocations.is_empty() {
         writeln!(
             output,
@@ -188,7 +180,6 @@ fn render_auth_invocation(
     };
     let child_prefix = if is_last { "    " } else { "│   " };
 
-    // Show contract and function with auth status
     let auth_status = if invocation.is_error {
         icons::AUTH_MISSING
     } else {
@@ -205,10 +196,8 @@ fn render_auth_invocation(
         invocation.function_name
     )?;
 
-    // Show nested auth requirements
     let auth_prefix = format!("{}{}", prefix, child_prefix);
 
-    // Placeholder for actual auth requirements - this would need auth data
     writeln!(
         output,
         "{}├─ {} Required signatures:",
@@ -228,7 +217,6 @@ fn render_auth_invocation(
         icons::AUTH_PROVIDED
     )?;
 
-    // Sub-invocations with their auth requirements
     if !invocation.sub_invocations.is_empty() {
         writeln!(
             output,

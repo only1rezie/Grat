@@ -10,10 +10,8 @@ use crate::types::report::{DiagnosticReport, RootCause, Severity, SuggestedFix};
 
 /// Build a diagnostic report from a classified error.
 pub fn build_report(error: &ClassifiedError) -> PrismResult<DiagnosticReport> {
-    // Load the taxonomy database
     let db = TaxonomyDatabase::load_embedded()?;
 
-    // Look up the error in the taxonomy
     if let Some(entry) = db.lookup(&error.category, error.error_code) {
         let report = DiagnosticReport {
             error_category: entry.category.to_string(),
@@ -54,7 +52,6 @@ pub fn build_report(error: &ClassifiedError) -> PrismResult<DiagnosticReport> {
 
         Ok(report)
     } else {
-        // Error not found in taxonomy — return a basic report
         Ok(DiagnosticReport::new(
             &error.category.to_string(),
             error.error_code,

@@ -6,7 +6,6 @@ use crate::output::renderers::{render_section_header, render_error_card, render_
 
 /// Print a diagnostic report in human-readable colored format.
 pub fn print_report(report: &DiagnosticReport) -> anyhow::Result<()> {
-    // Display the error card prominently at the top
     println!("{}", render_error_card(report));
     println!();
 

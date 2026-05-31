@@ -7,7 +7,6 @@ use anyhow::Result;
 use directories::ProjectDirs;
 use crate::output::theme::ColorPalette;
 
-// ─── Args ────────────────────────────────────────────────────────────────────
 
 #[derive(clap::Args)]
 #[command(about = "Check binary health, network connectivity, and cache state.")]
@@ -17,7 +16,6 @@ pub struct DiagnosticArgs {
     pub quiet: bool,
 }
 
-// ─── Status ──────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq)]
 enum Status {
@@ -52,7 +50,6 @@ impl Status {
     }
 }
 
-// ─── Check ───────────────────────────────────────────────────────────────────
 
 struct Check {
     name: String,
@@ -82,7 +79,6 @@ impl Check {
     }
 }
 
-// ─── Checks ──────────────────────────────────────────────────────────────────
 
 fn check_binary_version() -> Check {
     let version = env!("CARGO_PKG_VERSION");
@@ -169,7 +165,6 @@ fn check_cache() -> Vec<Check> {
 
     let mut checks = Vec::new();
 
-    // Existence
     if !dir.exists() {
         checks.push(Check::warn(
             format!("Cache directory   {}", dir.display()),
@@ -179,7 +174,6 @@ fn check_cache() -> Vec<Check> {
     }
     checks.push(Check::ok(format!("Cache directory   {}", dir.display())));
 
-    // Writability
     let probe = dir.join(".prism_diag_probe");
     match std::fs::write(&probe, b"ok") {
         Ok(_) => {
@@ -194,7 +188,6 @@ fn check_cache() -> Vec<Check> {
         }
     }
 
-    // Disk space
     match free_bytes(&dir) {
         Some(free) => {
             let mib = free / (1024 * 1024);
@@ -222,7 +215,6 @@ fn check_cache() -> Vec<Check> {
         }
     }
 
-    // Cache size (informational)
     if let Ok(used) = dir_size_mib(&dir) {
         checks.push(Check::ok(format!(
             "Cache size                        {}MiB used",
@@ -262,7 +254,6 @@ fn dir_size_mib(path: &PathBuf) -> Result<u64> {
     Ok(total / (1024 * 1024))
 }
 
-// ─── Report ───────────────────────────────────────────────────────────────────
 
 fn print_report(checks: &[Check], quiet: bool) {
     let palette = ColorPalette::default();
@@ -303,7 +294,6 @@ fn print_report(checks: &[Check], quiet: bool) {
     }
 }
 
-// ─── Entry point ──────────────────────────────────────────────────────────────
 
 pub async fn run(args: DiagnosticArgs) -> Result<()> {
     let palette = ColorPalette::default();
@@ -324,7 +314,6 @@ pub async fn run(args: DiagnosticArgs) -> Result<()> {
     Ok(())
 }
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {

@@ -68,29 +68,24 @@ impl<'a> ErrorCard<'a> {
     pub fn render(&self) -> String {
         let mut output = String::new();
 
-        // Create the border and content structure
         let category_badge = format!("[{}]", self.report.error_category.to_uppercase());
         let error_line = format!(
             " {} ({})",
             self.report.error_name, self.report.error_code
         );
 
-        // Calculate width based on content
         let max_width = error_line.len().max(self.report.summary.len()).max(category_badge.len()) + 4;
         let border = "█".repeat(max_width);
 
-        // Render with red color
         let border_colored = border.red().bold().to_string();
         let category_colored = category_badge.red().bold().to_string();
         let error_colored = error_line.red().bold().to_string();
         let summary_colored = self.report.summary.white().to_string();
 
-        // Build the card
         output.push_str(&format!("{}\n", border_colored));
         output.push_str(&format!("{} {}\n", "█".red().bold(), category_colored));
         output.push_str(&format!("{} {}\n", "█".red().bold(), error_colored));
 
-        // Add component info if it's a contract error
         if let Some(contract_error) = &self.report.contract_error {
             let component_line = format!("Component: {}", contract_error.contract_id);
             output.push_str(&format!("{} {}\n", "█".red().bold(), component_line.white()));

@@ -4,14 +4,13 @@
 //! `getLedgerEntries`, `getEvents`, `getLatestLedger`. Handles retries and
 //! basic rate-limit backoff.
 
-use crate::rpc::jsonrpc::{JsonRpcRequest, JsonRpcResponse};
-use crate::network::NetworkConfig;
 use crate::error::{PrismError, PrismResult};
+use crate::network::NetworkConfig;
+use crate::rpc::jsonrpc::{JsonRpcRequest, JsonRpcResponse};
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
-// ── simulateTransaction response types ──────────────────────────────────────
 
 /// Ledger footprint returned by `simulateTransaction`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,8 +92,6 @@ pub struct SorobanRpcClient {
     /// Soroban RPC endpoint URL.
     rpc_url: String,
 }
-
-
 
 /// Transaction status in Soroban.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -183,15 +180,14 @@ impl SorobanRpcClient {
         tx_xdr: &str,
     ) -> PrismResult<SimulateTransactionResponse> {
         let params = serde_json::json!({ "transaction": tx_xdr });
-        let raw = self.call::<serde_json::Value>("simulateTransaction", params).await?;
+        let raw = self
+            .call::<serde_json::Value>("simulateTransaction", params)
+            .await?;
 
-        let response: SimulateTransactionResponse =
-            serde_json::from_value(raw).map_err(|e| {
-                PrismError::RpcError(format!("Failed to parse simulateTransaction response: {e}"))
-            })?;
+        let response: SimulateTransactionResponse = serde_json::from_value(raw).map_err(|e| {
+            PrismError::RpcError(format!("Failed to parse simulateTransaction response: {e}"))
+        })?;
 
-        // Surface simulation-level errors as a proper Rust error so callers
-        // don't need to inspect the struct themselves.
         if let Some(ref err) = response.error {
             return Err(PrismError::RpcError(format!(
                 "simulateTransaction failed: {err}"
@@ -204,7 +200,8 @@ impl SorobanRpcClient {
     /// Fetch ledger entries by their XDR keys.
     pub async fn get_ledger_entries(&self, keys: &[String]) -> PrismResult<serde_json::Value> {
         let params = serde_json::json!({ "keys": keys });
-        self.call::<serde_json::Value>("getLedgerEntries", params).await
+        self.call::<serde_json::Value>("getLedgerEntries", params)
+            .await
     }
 
     /// Query events starting from `start_ledger` with the given filters.
@@ -250,6 +247,15 @@ impl SorobanRpcClient {
                 Ok(response) => {
                     let status = response.status();
                     let elapsed_ms = started.elapsed().as_millis();
+                    tracing::info!(
+                        method,
+                        endpoint = %self.rpc_url,
+                        attempt,
+                        %status,
+                        elapsed_ms,
+                        "RPC request latency"
+                    );
+
                     let body = response.text().await.map_err(|e| {
                         PrismError::RpcError(format!("Failed to read response body: {e}"))
                     })?;
@@ -296,11 +302,21 @@ impl SorobanRpcClient {
                     });
                 }
                 Err(e) => {
+                    let elapsed_ms = started.elapsed().as_millis();
+                    tracing::info!(
+                        method,
+                        endpoint = %self.rpc_url,
+                        attempt,
+                        elapsed_ms,
+                        error = %e,
+                        "RPC request latency"
+                    );
+
                     tracing::debug!(
                         method,
                         endpoint = %self.rpc_url,
                         attempt,
-                        elapsed_ms = started.elapsed().as_millis(),
+                        elapsed_ms,
                         error = %e,
                         "RPC request failed"
                     );
@@ -550,7 +566,6 @@ mod tests {
         let addr = listener.local_addr().unwrap();
         let rpc_url = format!("http://{}", addr);
 
-        // Set a 1s timeout in config
         let config = NetworkConfig {
             network: crate::network::Network::Testnet,
             rpc_url,
@@ -563,7 +578,6 @@ mod tests {
 
         tokio::spawn(async move {
             while let Ok((_socket, _)) = listener.accept().await {
-                // Sleep for 2s to trigger timeout
                 tokio::time::sleep(Duration::from_secs(2)).await;
             }
         });
@@ -573,7 +587,6 @@ mod tests {
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
         println!("Error message: {}", err_msg);
-        // reqwest timeout error message usually contains "timeout"
         assert!(
             err_msg.to_lowercase().contains("timeout") || err_msg.to_lowercase().contains("error sending request"),
             "Actual error: {}", err_msg

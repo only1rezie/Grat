@@ -67,23 +67,19 @@ pub fn render_contract_tree<W: WriteColor>(
         (tree_chars::BRANCH, prefix.to_string() + tree_chars::CONTINUE)
     };
 
-    // Render contract ID and function name
     write!(writer, "{}", prefix)?;
     write!(writer, "{}", connector)?;
 
-    // Contract ID (cyan, bold)
     colors::contract_id(writer);
     write!(writer, "{}", invocation.contract_id)?;
 
     write!(writer, "::")?;
 
-    // Function name (green, bold)
     colors::function_name(writer);
     write!(writer, "{}", invocation.function_name)?;
 
     colors::reset(writer);
 
-    // Status indicator
     if invocation.is_error {
         colors::error(writer);
         write!(writer, " [ERROR]")?;
@@ -94,7 +90,6 @@ pub fn render_contract_tree<W: WriteColor>(
         colors::reset(writer);
     }
 
-    // Resource usage
     write!(
         writer,
         " (CPU: {}, MEM: {})",
@@ -104,7 +99,6 @@ pub fn render_contract_tree<W: WriteColor>(
 
     writeln!(writer)?;
 
-    // Render arguments if any
     if !invocation.arguments.is_empty() {
         let args_prefix = if is_last {
             prefix.to_string() + tree_chars::SPACE
@@ -125,7 +119,6 @@ pub fn render_contract_tree<W: WriteColor>(
         }
     }
 
-    // Render host calls if any
     if !invocation.host_calls.is_empty() {
         let host_prefix = if is_last {
             prefix.to_string() + tree_chars::SPACE
@@ -139,7 +132,6 @@ pub fn render_contract_tree<W: WriteColor>(
         }
     }
 
-    // Render sub-invocations recursively
     if !invocation.sub_invocations.is_empty() {
         let sub_prefix = if is_last {
             prefix.to_string() + tree_chars::SPACE
@@ -172,19 +164,16 @@ fn render_host_call<W: WriteColor>(
     write!(writer, "{}", prefix)?;
     write!(writer, "{}", connector)?;
 
-    // Host function name (yellow)
     colors::warning(writer);
     write!(writer, "🔧 {}", host_call.function_name)?;
     colors::reset(writer);
 
-    // Status indicator
     if host_call.is_error {
         colors::error(writer);
         write!(writer, " [ERROR]")?;
         colors::reset(writer);
     }
 
-    // Resource usage
     write!(
         writer,
         " (CPU: {}, MEM: {})",
@@ -194,7 +183,6 @@ fn render_host_call<W: WriteColor>(
 
     writeln!(writer)?;
 
-    // Render arguments if any
     if !host_call.arguments.is_empty() {
         let args_prefix = if is_last {
             prefix.to_string() + tree_chars::SPACE
@@ -215,7 +203,6 @@ fn render_host_call<W: WriteColor>(
         }
     }
 
-    // Render error if any
     if let Some(error) = &host_call.error {
         let error_prefix = if is_last {
             prefix.to_string() + tree_chars::SPACE
@@ -237,7 +224,6 @@ pub fn render_trace_tree<W: WriteColor>(
     writer: &mut W,
     trace: &ExecutionTrace
 ) -> std::io::Result<()> {
-    // Header
     colors::contract_id(writer);
     write!(writer, "🔍 Execution Trace Tree")?;
     colors::reset(writer);
@@ -248,7 +234,6 @@ pub fn render_trace_tree<W: WriteColor>(
     writeln!(writer, "📊 Ledger Sequence: {}", trace.ledger_sequence)?;
     writeln!(writer)?;
 
-    // Resource summary
     colors::warning(writer);
     write!(writer, "📈 Resource Summary")?;
     colors::reset(writer);
@@ -272,7 +257,6 @@ pub fn render_trace_tree<W: WriteColor>(
     )?;
     writeln!(writer)?;
 
-    // Contract invocation tree
     if trace.invocations.is_empty() {
         writeln!(writer, "📭 No contract invocations found")?;
     } else {
@@ -287,7 +271,6 @@ pub fn render_trace_tree<W: WriteColor>(
         }
     }
 
-    // Warnings
     if !trace.resource_profile.warnings.is_empty() {
         writeln!(writer)?;
         colors::warning(writer);

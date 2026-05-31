@@ -67,7 +67,6 @@ pub fn build_trace_tree(result: &SandboxResult) -> PrismResult<Vec<ContractInvoc
                 }
             }
             _ => {
-                // Other event types are handled by enrichment passes
             }
         }
     }

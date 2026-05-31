@@ -9,7 +9,6 @@ use crate::types::trace::{DiffChangeType, LedgerEntryDiff, StateDiff};
 pub fn compute_diff(pre_state: &LedgerState, result: &SandboxResult) -> PrismResult<StateDiff> {
     let mut entries = Vec::new();
 
-    // Find modified and deleted entries
     for (key, before_value) in &pre_state.entries {
         if let Some(after_value) = result.final_state.get(key) {
             if before_value != after_value {
@@ -37,7 +36,6 @@ pub fn compute_diff(pre_state: &LedgerState, result: &SandboxResult) -> PrismRes
         }
     }
 
-    // Find created entries (in final state but not in pre-state)
     for (key, after_value) in &result.final_state {
         if !pre_state.entries.contains_key(key) {
             entries.push(LedgerEntryDiff {

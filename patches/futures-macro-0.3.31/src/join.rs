@@ -35,8 +35,6 @@ fn bind_futures(fut_exprs: Vec<Expr>, span: Span) -> (Vec<TokenStream2>, Vec<Ide
         .map(|(i, expr)| {
             let name = format_ident!("_fut{}", i, span = span);
             future_let_bindings.push(quote! {
-                // Move future into a local so that it is pinned in one place and
-                // is no longer accessible by the end user.
                 let mut #name = __futures_crate::future::maybe_done(#expr);
                 let mut #name = unsafe { __futures_crate::Pin::new_unchecked(&mut #name) };
             });
@@ -51,7 +49,6 @@ fn bind_futures(fut_exprs: Vec<Expr>, span: Span) -> (Vec<TokenStream2>, Vec<Ide
 pub(crate) fn join(input: TokenStream) -> TokenStream {
     let parsed = syn::parse_macro_input!(input as Join);
 
-    // should be def_site, but that's unstable
     let span = Span::call_site();
 
     let (future_let_bindings, future_names) = bind_futures(parsed.fut_exprs, span);
@@ -89,7 +86,6 @@ pub(crate) fn join(input: TokenStream) -> TokenStream {
 pub(crate) fn try_join(input: TokenStream) -> TokenStream {
     let parsed = syn::parse_macro_input!(input as Join);
 
-    // should be def_site, but that's unstable
     let span = Span::call_site();
 
     let (future_let_bindings, future_names) = bind_futures(parsed.fut_exprs, span);

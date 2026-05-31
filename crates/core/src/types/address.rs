@@ -1,5 +1,6 @@
 //! Address types for Stellar accounts and contracts.
 
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use stellar_strkey::{ed25519::PublicKey, Contract, Strkey};
 
@@ -8,7 +9,7 @@ use crate::error::{PrismError, PrismResult};
 /// Represents a Stellar address (account or contract).
 ///
 /// Internally stores the raw bytes, but displays as the standard strkey format.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Address {
     /// The raw bytes of the address.
     pub bytes: Vec<u8>,
@@ -17,7 +18,7 @@ pub struct Address {
 }
 
 /// The type of Stellar address.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AddressType {
     /// Account public key (starts with 'G').
     Account,

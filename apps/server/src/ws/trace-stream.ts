@@ -1,4 +1,3 @@
-// WebSocket server for streaming trace data during replay
 import { WebSocketServer, WebSocket } from "ws";
 
 export interface TraceStreamMessage {
@@ -16,12 +15,9 @@ export function createTraceStream(port: number) {
       try {
         const message = JSON.parse(data.toString());
         
-        // Handle trace subscription requests
         if (message.type === "subscribe" && message.tx_hash) {
           console.log(`Client subscribed to trace: ${message.tx_hash}`);
           
-          // Forward subscription to Rust WebSocket server
-          // The Rust server (prism serve) handles the actual trace streaming
           ws.send(JSON.stringify({
             type: "subscribed",
             tx_hash: message.tx_hash,

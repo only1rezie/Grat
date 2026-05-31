@@ -11,7 +11,6 @@ mod kw {
 }
 
 struct Select {
-    // span of `complete`, then expression after `=> ...`
     complete: Option<Expr>,
     default: Option<Expr>,
     normal_fut_exprs: Vec<Expr>,
@@ -36,33 +35,27 @@ impl Parse for Select {
 
         while !input.is_empty() {
             let case_kind = if input.peek(kw::complete) {
-                // `complete`
                 if select.complete.is_some() {
                     return Err(input.error("multiple `complete` cases found, only one allowed"));
                 }
                 input.parse::<kw::complete>()?;
                 CaseKind::Complete
             } else if input.peek(Token![default]) {
-                // `default`
                 if select.default.is_some() {
                     return Err(input.error("multiple `default` cases found, only one allowed"));
                 }
                 input.parse::<Ident>()?;
                 CaseKind::Default
             } else {
-                // `<pat> = <expr>`
                 let pat = Pat::parse_multi_with_leading_vert(input)?;
                 input.parse::<Token![=]>()?;
                 let expr = input.parse()?;
                 CaseKind::Normal(pat, expr)
             };
 
-            // `=> <expr>`
             input.parse::<Token![=>]>()?;
             let expr = Expr::parse_with_earlier_boundary_rule(input)?;
 
-            // Commas after the expression are only optional if it's a `Block`
-            // or it is the last branch in the `match`.
             let is_block = match expr {
                 Expr::Block(_) => true,
                 _ => false,
@@ -87,17 +80,12 @@ impl Parse for Select {
     }
 }
 
-// Enum over all the cases in which the `select!` waiting has completed and the result
-// can be processed.
-//
-// `enum __PrivResult<_1, _2, ...> { _1(_1), _2(_2), ..., Complete }`
 fn declare_result_enum(
     result_ident: Ident,
     variants: usize,
     complete: bool,
     span: Span,
 ) -> (Vec<Ident>, syn::ItemEnum) {
-    // "_0", "_1", "_2"
     let variant_names: Vec<Ident> =
         (0..variants).map(|num| format_ident!("_{}", num, span = span)).collect();
 
@@ -131,7 +119,6 @@ pub(crate) fn select_biased(input: TokenStream) -> TokenStream {
 fn select_inner(input: TokenStream, random: bool) -> TokenStream {
     let parsed = syn::parse_macro_input!(input as Select);
 
-    // should be def_site, but that's unstable
     let span = Span::call_site();
 
     let enum_ident = Ident::new("__PrivResult", span);
@@ -143,7 +130,6 @@ fn select_inner(input: TokenStream, random: bool) -> TokenStream {
         span,
     );
 
-    // bind non-`Ident` future exprs w/ `let`
     let mut future_let_bindings = Vec::with_capacity(parsed.normal_fut_exprs.len());
     let bound_future_names: Vec<_> = parsed
         .normal_fut_exprs
@@ -168,8 +154,6 @@ fn select_inner(input: TokenStream, random: bool) -> TokenStream {
         })
         .collect();
 
-    // For each future, make an `&mut dyn FnMut(&mut Context<'_>) -> Option<Poll<__PrivResult<...>>`
-    // to use for polling that individual future. These will then be put in an array.
     let poll_functions = bound_future_names.iter().zip(variant_names.iter()).map(
         |(bound_future_name, variant_name)| {
             quote! {
@@ -225,7 +209,6 @@ fn select_inner(input: TokenStream, random: bool) -> TokenStream {
     };
 
     let await_select_fut = if parsed.default.is_some() {
-        // For select! with default this returns the Poll result
         quote! {
             __poll_fn(&mut __futures_crate::task::Context::from_waker(
                 __futures_crate::task::noop_waker_ref()
@@ -238,7 +221,6 @@ fn select_inner(input: TokenStream, random: bool) -> TokenStream {
     };
 
     let execute_result_expr = if let Some(default_expr) = &parsed.default {
-        // For select! with default __select_result is a Poll, otherwise not
         quote! {
             match __select_result {
                 __futures_crate::task::Poll::Ready(result) => match result {

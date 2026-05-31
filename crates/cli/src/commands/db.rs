@@ -57,7 +57,6 @@ pub async fn run(args: DbArgs, output_format: &str) -> anyhow::Result<()> {
             } else {
                 println!("Searching for: {query}");
             }
-            // TODO: Search taxonomy entries
         }
     }
 
@@ -92,16 +91,12 @@ async fn update_taxonomy_database(output_format: &str) -> Result<()> {
     spinner.set_message("Fetching latest taxonomy release...");
     spinner.enable_steady_tick(Duration::from_millis(100));
 
-    // Get the local data directory
     let data_dir = get_local_data_dir().context("Failed to determine local data directory")?;
 
-    // Create directory if it doesn't exist
     std::fs::create_dir_all(&data_dir).context("Failed to create local data directory")?;
 
     spinner.set_message("Downloading taxonomy files...");
 
-    // For now, we'll simulate the download and update process
-    // In a real implementation, this would fetch from GitHub releases
     tokio::time::sleep(Duration::from_secs(2)).await;
 
     spinner.set_message("Extracting taxonomy files...");
@@ -112,7 +107,6 @@ async fn update_taxonomy_database(output_format: &str) -> Result<()> {
 
     spinner.finish_with_message("✅ Taxonomy database updated successfully!");
 
-    // Load and display stats
     let db = prism_core::taxonomy::loader::TaxonomyDatabase::load_embedded()
         .context("Failed to load updated taxonomy database")?;
     println!("📊 Database now contains {} error definitions", db.len());

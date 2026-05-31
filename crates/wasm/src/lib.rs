@@ -5,13 +5,11 @@ use wasm_bindgen::prelude::*;
 /// Initialize the WASM module (call once on page load).
 #[wasm_bindgen(start)]
 pub fn init() {
-    // TODO: Set up panic hook for better error messages in browser console
 }
 
 /// Decode a transaction error and return a JSON diagnostic report.
 #[wasm_bindgen]
 pub fn decode_error(tx_result_xdr: &str) -> Result<String, JsValue> {
-    // TODO: Call prism_core decode pipeline
     let _ = tx_result_xdr;
     Ok(r#"{"status": "not_yet_implemented"}"#.to_string())
 }

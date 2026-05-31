@@ -98,7 +98,6 @@ pub(crate) fn stream_select(input: TokenStream) -> Result<TokenStream, syn::Erro
                     #(
                         if let Some(new_hint) = self.#field_indices.as_ref().map(|s| s.size_hint()) {
                             s.0 += new_hint.0;
-                            // We can change this out for `.zip` when the MSRV is 1.46.0 or higher.
                             s.1 = s.1.and_then(|a| new_hint.1.map(|b| a + b));
                         }
                     )*

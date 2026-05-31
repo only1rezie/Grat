@@ -1,4 +1,3 @@
-// Shared TypeScript types for the web application
 
 export interface DiagnosticReport {
   error_category: string;

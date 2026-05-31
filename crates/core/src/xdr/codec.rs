@@ -6,7 +6,7 @@
 use crate::error::{PrismError, PrismResult};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use stellar_xdr::curr::{
-    DiagnosticEvent, LedgerEntry, Limits, ReadXdr, TransactionEnvelope, TransactionMeta, 
+    DiagnosticEvent, LedgerEntry, Limits, ReadXdr, ScVec, TransactionEnvelope, TransactionMeta,
     WriteXdr, TransactionResult,
 };
 
@@ -34,7 +34,6 @@ pub trait XdrCodec: Sized {
     }
 }
 
-// ── Trait Implementations ───────────────────────────────────────────────────
 
 impl XdrCodec for TransactionMeta {
     const TYPE_NAME: &'static str = "TransactionMeta";
@@ -131,7 +130,25 @@ impl XdrCodec for DiagnosticEvent {
     }
 }
 
-// ── Low-level helpers ───────────────────────────────────────────────────────
+impl XdrCodec for ScVec {
+    const TYPE_NAME: &'static str = "ScVec";
+
+    fn from_xdr_bytes(bytes: &[u8]) -> PrismResult<Self> {
+        ScVec::from_xdr(bytes, Limits::none()).map_err(|e| {
+            PrismError::XdrDecodingFailed {
+                type_name: Self::TYPE_NAME,
+                reason: e.to_string(),
+            }
+        })
+    }
+
+    fn to_xdr_bytes(&self) -> PrismResult<Vec<u8>> {
+        self.to_xdr(Limits::none()).map_err(|e| {
+            PrismError::XdrError(format!("Failed to encode {}: {}", Self::TYPE_NAME, e))
+        })
+    }
+}
+
 
 /// Decode a base64-encoded XDR string to raw bytes.
 pub fn decode_xdr_base64(xdr_base64: &str) -> PrismResult<Vec<u8>> {
@@ -162,7 +179,6 @@ pub fn decode_tx_hash(hash_hex: &str) -> PrismResult<[u8; 32]> {
     Ok(arr)
 }
 
-// ── Tests ───────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -242,8 +258,6 @@ mod tests {
 
     #[test]
     fn test_transaction_result_round_trip() {
-        // Minimal valid TransactionResult: feeCharged=0, txSUCCESS=0, results=[], ext=V0
-        // 8 bytes (fee), 4 bytes (code), 4 bytes (results len), 4 bytes (ext)
         let xdr_bytes = vec![0u8; 20];
         let bytes = encode_xdr_base64(&xdr_bytes);
         
@@ -272,9 +286,21 @@ mod tests {
         let decoded = <DiagnosticEvent as crate::xdr::codec::XdrCodec>::from_xdr_base64(&b64).expect("decode");
         assert_eq!(event, decoded);
     }
+
+    #[test]
+    fn test_scvec_round_trip() {
+        let scvec = ScVec(vec![
+            stellar_xdr::curr::ScVal::Void,
+            stellar_xdr::curr::ScVal::Bool(true),
+            stellar_xdr::curr::ScVal::U32(42),
+        ].try_into().unwrap());
+
+        let b64 = crate::xdr::codec::XdrCodec::to_xdr_base64(&scvec).expect("encode");
+        let decoded = <ScVec as crate::xdr::codec::XdrCodec>::from_xdr_base64(&b64).expect("decode");
+        assert_eq!(scvec, decoded);
+    }
 }
 
-// ── Internal helpers ──────────────────────────────────────────────────────────
 
 fn hex_decode(input: &str) -> Result<Vec<u8>, String> {
     if input.len() % 2 != 0 {

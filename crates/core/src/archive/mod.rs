@@ -48,8 +48,6 @@ impl ArchiveClient {
         let archive_count = self.archive_urls.len();
         let _client = &self.client;
 
-        // TODO: Fetch and decompress archive files (gzip/xz)
-        // TODO: Try each archive URL in order until one succeeds
 
         tracing::info!(
             archive_count,

@@ -1,4 +1,3 @@
-// CLI bridge — shells out to prism binary and parses JSON output
 import { execFile } from "child_process";
 
 export function callPrism(args: string[]): Promise<unknown> {

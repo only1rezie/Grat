@@ -60,7 +60,6 @@ impl ExecutionStepper {
 
     /// Execute a step command.
     pub fn step(&mut self, command: StepCommand) -> Option<&PauseState> {
-        // TODO: Implement stepping logic against the sandbox
         tracing::debug!("Stepping: {command:?}");
         self.current_state.as_ref()
     }

@@ -3,7 +3,6 @@ export default function Header() {
     <header>
       <nav>
         <span>🔬 Prism</span>
-        {/* TODO: Navigation links, network switcher */}
       </nav>
     </header>
   );

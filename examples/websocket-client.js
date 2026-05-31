@@ -32,7 +32,6 @@ ws.on('open', () => {
   console.log('✓ Connected to Prism WebSocket server');
   console.log(`Requesting trace for: ${TX_HASH}\n`);
   
-  // Send trace request
   ws.send(JSON.stringify({ tx_hash: TX_HASH }));
 });
 
@@ -94,7 +93,6 @@ ws.on('close', () => {
   console.log('\nConnection closed');
 });
 
-// Handle Ctrl+C
 process.on('SIGINT', () => {
   console.log('\n\nClosing connection...');
   ws.close();
