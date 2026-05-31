@@ -8,6 +8,8 @@ pub mod contract_error;
 pub mod diagnostic;
 pub mod host_error;
 pub mod report;
+pub mod mappings;
+
 
 use crate::error::PrismResult;
 use crate::types::report::DiagnosticReport;

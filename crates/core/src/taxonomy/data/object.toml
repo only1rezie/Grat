@@ -7,9 +7,127 @@ description = "Errors triggered during host object creation, access, or manipula
 source_module = "soroban-env-host/src/host/mem_helper.rs"
 
 [[errors]]
-id = "host.object.out_of_bounds"
+id = "host.object.unknown_error"
 category = "object"
 code = 0
+name = "UnknownError"
+severity = "Error"
+since_protocol = 20
+summary = "An unknown error occurred during a host object operation."
+detailed_explanation = """
+The host encountered an unexpected failure or internal inconsistency while performing a host object operation. \
+This indicates a systemic host issue or unhandled execution state rather than a standard contract logic error.
+"""
+
+[[errors.common_causes]]
+description = "Internal host state corruption or memory access anomaly"
+likelihood = "low"
+
+[[errors.suggested_fixes]]
+description = "Verify transaction parameters, trace host execution, or upgrade the environment"
+difficulty = "hard"
+requires_upgrade = false
+
+[[errors]]
+id = "host.object.unknown_reference"
+category = "object"
+code = 1
+name = "UnknownReference"
+severity = "Error"
+since_protocol = 20
+summary = "The referenced host object handle is invalid or does not exist."
+detailed_explanation = """
+When smart contracts call host functions, they pass handles (handles are index references) to host-managed objects \
+like Vec, Map, or Bytes. If a handle is passed that does not exist or has already been deallocated, this error is raised.
+"""
+
+[[errors.common_causes]]
+description = "Passing an uninitialized or invalid handle index as an object reference"
+likelihood = "high"
+
+[[errors.common_causes]]
+description = "Using a stale object reference from a previous invocation or scope"
+likelihood = "medium"
+
+[[errors.suggested_fixes]]
+description = "Ensure object handles are valid, newly created, and not modified or corrupted in raw memory"
+difficulty = "easy"
+requires_upgrade = false
+
+[[errors]]
+id = "host.object.unexpected_type"
+category = "object"
+code = 2
+name = "UnexpectedType"
+severity = "Error"
+since_protocol = 20
+summary = "The host object type does not match the expected type."
+detailed_explanation = """
+Host functions are type-safe. If a host function expects a handle to a Map object, but the contract passes a handle to a Vec \
+object, the host rejects the call with this type mismatch error.
+"""
+
+[[errors.common_causes]]
+description = "Calling an object-specific function (e.g. Map lookup) using a reference of a different type (e.g. Vec)"
+likelihood = "high"
+
+[[errors.suggested_fixes]]
+description = "Verify the expected object types in host function signatures and double check conversion logic"
+difficulty = "easy"
+requires_upgrade = false
+
+[[errors]]
+id = "host.object.exceeded_limit"
+category = "object"
+code = 3
+name = "ExceededLimit"
+severity = "Fatal"
+since_protocol = 20
+summary = "The number of active host objects has exceeded the maximum capacity."
+detailed_explanation = """
+The Soroban host enforces strict bounds on the maximum number of active host objects to prevent excessive memory usage. \
+If the contract attempts to allocate more host objects than allowed or exceeds the absolute u32::MAX limit, the transaction is terminated.
+"""
+
+[[errors.common_causes]]
+description = "Allocating a large number of temporary host objects in a loop without freeing or reusing them"
+likelihood = "high"
+
+[[errors.suggested_fixes]]
+description = "Optimize allocation patterns, reuse existing objects, or batch operations into smaller transactions"
+difficulty = "medium"
+requires_upgrade = false
+
+[[errors]]
+id = "host.object.not_found"
+category = "object"
+code = 4
+name = "ObjectNotFound"
+severity = "Error"
+since_protocol = 20
+summary = "The requested host object could not be found or has already been consumed."
+detailed_explanation = """
+The host was unable to locate the object corresponding to the provided handle or key. This occurs when accessing a storage entry, \
+map key, or temporary host object that is either missing, has expired, or was consumed by a destructive host operation.
+"""
+
+[[errors.common_causes]]
+description = "Accessing a host object after it has been consumed or removed from storage"
+likelihood = "high"
+
+[[errors.common_causes]]
+description = "Mismatched object lookup key or index in database/environment queries"
+likelihood = "high"
+
+[[errors.suggested_fixes]]
+description = "Confirm that the object exists and is initialized before performing reads or updates"
+difficulty = "easy"
+requires_upgrade = false
+
+[[errors]]
+id = "host.object.out_of_bounds"
+category = "object"
+code = 5
 name = "IndexBounds"
 severity = "Error"
 since_protocol = 20
@@ -31,7 +149,26 @@ likelihood = "high"
 [[errors.suggested_fixes]]
 description = "Check the length of the collection before accessing elements by index"
 difficulty = "easy"
-requires_upgrade = true
+requires_upgrade = false
 
-related_errors = ["host.value.invalid_input"]
-source_file = "soroban-env-host/src/host/mem_helper.rs"
+[[errors]]
+id = "host.object.contract_hash_wrong_length"
+category = "object"
+code = 6
+name = "ContractHashWrongLength"
+severity = "Error"
+since_protocol = 20
+summary = "The contract hash or address byte array has an incorrect length."
+detailed_explanation = """
+Operations that involve deploy or lookup of contracts expect a cryptographic hash or address of exactly 32 bytes. \
+If the contract passes a byte array or slice with a different size, the host raises this validation error.
+"""
+
+[[errors.common_causes]]
+description = "Passing an address, contract ID, or cryptographic hash of incorrect length (not 32 bytes)"
+likelihood = "high"
+
+[[errors.suggested_fixes]]
+description = "Ensure all contract IDs and cryptographic hashes are validated and sized to exactly 32 bytes"
+difficulty = "easy"
+requires_upgrade = false
