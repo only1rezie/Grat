@@ -56,9 +56,12 @@ impl HostError {
     /// developer reads when diagnosing a failed transaction.
     pub fn summary(&self) -> String {
         match self {
-            Self::Budget { code } => match code {
-                0 => "CPU budget exceeded: the transaction ran out of CPU instructions before completing execution.".to_string(),
-                _ => format!("Budget error (code {code}): the transaction exceeded an allocated resource budget."),
+            Self::Budget { code } => {
+                if let Some(detail) = crate::decode::mappings::budget::lookup(*code) {
+                    detail.summary.to_string()
+                } else {
+                    format!("Budget error (code {code}): the transaction exceeded an allocated resource budget.")
+                }
             },
             Self::Storage { code } => match code {
                 0 => "Storage access denied: the contract tried to read or write a ledger entry not declared in the transaction footprint.".to_string(),
