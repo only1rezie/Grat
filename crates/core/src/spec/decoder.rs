@@ -124,6 +124,7 @@ fn format_type_def(type_def: &ScSpecTypeDef) -> String {
         ScSpecTypeDef::U256 => "U256".to_string(),
         ScSpecTypeDef::I256 => "I256".to_string(),
         ScSpecTypeDef::Bytes => "Bytes".to_string(),
+        ScSpecTypeDef::BytesN(b) => format!("BytesN<{}>", b.n),
         ScSpecTypeDef::String => "String".to_string(),
         ScSpecTypeDef::Symbol => "Symbol".to_string(),
         ScSpecTypeDef::Address => "Address".to_string(),
