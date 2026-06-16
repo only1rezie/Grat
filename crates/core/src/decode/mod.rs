@@ -9,6 +9,70 @@ pub mod report;
 
 use crate::error::PrismResult;
 use crate::types::report::DiagnosticReport;
+use crate::xdr::codec::XdrCodec;
+use stellar_xdr::curr::{ScVal, TransactionMeta, TransactionResult};
+
+/// Decode `resultMetaXdr` as `TransactionMeta` and, if it is V3, inject the
+/// Soroban contract events, diagnostic events, and return value into the JSON
+/// payload so downstream enrichment code sees the same shape it does for V1/V2.
+///
+/// Also extracts `fee_charged` from `resultXdr` so fee details are not lost.
+fn parse_v3_metadata(tx_data: &mut serde_json::Value) -> PrismResult<()> {
+    // Inject fee_charged from TransactionResult regardless of V3.
+    if let Some(result_b64) = tx_data.get("resultXdr").and_then(|r| r.as_str()) {
+        if let Ok(tx_result) = TransactionResult::from_xdr_base64(result_b64) {
+            tx_data["inclusionFee"] = serde_json::json!(tx_result.fee_charged);
+        }
+    }
+
+    let meta_b64 = match tx_data.get("resultMetaXdr").and_then(|r| r.as_str()) {
+        Some(s) => s.to_string(),
+        None => return Ok(()),
+    };
+
+    let meta = match TransactionMeta::from_xdr_base64(&meta_b64) {
+        Ok(m) => m,
+        Err(_) => return Ok(()),
+    };
+
+    if let TransactionMeta::V3(v3) = meta {
+        let soroban_meta = match v3.soroban_meta {
+            Some(s) => s,
+            None => return Ok(()),
+        };
+
+        // Inject contract events as base64 XDR strings.
+        if !soroban_meta.events.is_empty() {
+            let contract_events: Vec<String> = soroban_meta
+                .events
+                .iter()
+                .filter_map(|e| XdrCodec::to_xdr_base64(e).ok())
+                .collect();
+            tx_data["events"] = serde_json::json!({
+                "contractEventsXdr": contract_events
+            });
+        }
+
+        // Inject diagnostic events as base64 XDR strings.
+        if !soroban_meta.diagnostic_events.is_empty() {
+            let diagnostic_events: Vec<String> = soroban_meta
+                .diagnostic_events
+                .iter()
+                .filter_map(|e| XdrCodec::to_xdr_base64(e).ok())
+                .collect();
+            tx_data["diagnosticEventsXdr"] = serde_json::json!(diagnostic_events);
+        }
+
+        // Encode the return value as a base64 XDR string.
+        if soroban_meta.return_value != ScVal::Void {
+            if let Ok(b64) = XdrCodec::to_xdr_base64(&soroban_meta.return_value) {
+                tx_data["returnValue"] = serde_json::json!(b64);
+            }
+        }
+    }
+
+    Ok(())
+}
 
 fn filter_transaction_by_operation(
     tx_data: &mut serde_json::Value,
@@ -57,6 +121,8 @@ pub async fn decode_transaction_with_op_filter(
     let tx_data = rpc.get_transaction(tx_hash).await?;
     let mut tx_data = serde_json::to_value(tx_data)
         .map_err(|e| crate::error::PrismError::Internal(e.to_string()))?;
+
+    parse_v3_metadata(&mut tx_data)?;
 
     if let Some(index) = op_index {
         filter_transaction_by_operation(&mut tx_data, index)?;

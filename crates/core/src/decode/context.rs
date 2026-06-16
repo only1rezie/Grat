@@ -20,6 +20,7 @@ pub fn enrich_report(
         ledger_sequence,
         function_name: extract_function_name(tx_data),
         arguments: extract_arguments(tx_data),
+        return_value: extract_return_value(tx_data),
         fee: extract_fee_breakdown(tx_data),
         resources: extract_resource_summary(tx_data),
     };
@@ -41,6 +42,13 @@ fn extract_arguments(tx_data: &serde_json::Value) -> Vec<String> {
         .and_then(|a| a.as_array())
         .map(|args| args.iter().map(std::string::ToString::to_string).collect())
         .unwrap_or_default()
+}
+
+fn extract_return_value(tx_data: &serde_json::Value) -> Option<String> {
+    tx_data
+        .get("returnValue")
+        .and_then(|r| r.as_str())
+        .map(std::string::ToString::to_string)
 }
 
 fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {

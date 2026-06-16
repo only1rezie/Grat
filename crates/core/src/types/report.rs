@@ -58,6 +58,8 @@ pub struct TransactionContext {
 
     pub arguments: Vec<String>,
 
+    pub return_value: Option<String>,
+
     pub fee: FeeBreakdown,
 
     pub resources: ResourceSummary,
