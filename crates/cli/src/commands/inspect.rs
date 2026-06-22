@@ -23,7 +23,7 @@ pub async fn run(
     spinner.set_message("Fetching and decoding transaction...");
     spinner.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    let report = prism_core::decode::decode_transaction_with_op_filter(
+    let reports = prism_core::decode::decode_transaction_with_op_filter(
         &args.tx_hash,
         network,
         args.op_index,
@@ -32,12 +32,16 @@ pub async fn run(
 
     spinner.finish_and_clear();
 
-    crate::output::print_diagnostic_report(&report, output_format)?;
-
-
+    // Print each report with operation index label
+    for (i, report) in reports.iter().enumerate() {
+        if reports.len() > 1 {
+            println!("\n=== Operation {} ===", i + 1);
+        }
+        crate::output::print_diagnostic_report(report, output_format)?;
+    }
 
     if let Some(path) = save {
-        let json = serde_json::to_string_pretty(&report)?;
+        let json = serde_json::to_string_pretty(&reports)?;
         std::fs::write(path, &json)
             .map_err(|e| anyhow::anyhow!("Failed to write save file '{path}': {e}"))?;
         eprintln!("Saved report to {path}");
