@@ -46,7 +46,7 @@ pub async fn run(
     // Print each report; include operation index header when multiple reports
     for (i, report) in reports.iter().enumerate() {
         if reports.len() > 1 {
-            println!("\n=== Operation {} ===", i);
+            println!("\n=== Operation {} ===", i + 1);
         }
         crate::output::print_diagnostic_report(report, effective_output)?;
     }

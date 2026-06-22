@@ -15,7 +15,7 @@ pub use walker::{
 use crate::error::{PrismError, PrismResult};
 use crate::types::report::DiagnosticReport;
 use crate::xdr::codec::XdrCodec;
-use stellar_xdr::curr::{ScVal, SorobanTransactionMetaExt, TransactionMeta, TransactionResult};
+use stellar_xdr::curr::{ScVal, SorobanTransactionMetaExt, TransactionMeta, TransactionResult, TransactionEnvelope, FeeBumpTransactionInnerTx};
 
 /// Decode `resultMetaXdr` as `TransactionMeta` and, if it is V3, inject the
 /// Soroban contract events, diagnostic events, and return value into the JSON
@@ -135,14 +135,30 @@ pub async fn decode_transaction_with_op_filter(
 ) -> PrismResult<Vec<DiagnosticReport>> {
     let rpc = crate::rpc::SorobanRpcClient::new(network);
     let tx_data = rpc.get_transaction(tx_hash).await?;
-    let base_tx_data = serde_json::to_value(tx_data)
+    let mut base_tx_data = serde_json::to_value(tx_data)
         .map_err(|e| crate::error::PrismError::Internal(e.to_string()))?;
 
-    parse_v3_metadata(&mut tx_data)?;
+    // Parse V3 metadata and inject events/returnValue/fees into the base transaction JSON.
+    parse_v3_metadata(&mut base_tx_data)?;
 
-    if let Some(index) = op_index {
-        filter_transaction_by_operation(&mut tx_data, index)?;
-    }
+    // Decode the envelope XDR to determine the number of operations in the transaction.
+    let num_ops = if let Some(envelope_str) = base_tx_data.get("envelopeXdr").and_then(|v| v.as_str()) {
+        // Use the XDR codec to parse the envelope.
+        let envelope = <stellar_xdr::curr::TransactionEnvelope as crate::xdr::codec::XdrCodec>::from_xdr_base64(envelope_str)
+            .map_err(|e| crate::error::PrismError::Internal(format!("Failed to decode envelope XDR: {}", e)))?;
+        match envelope {
+            stellar_xdr::curr::TransactionEnvelope::Tx(v1) => v1.tx.operations.len(),
+            stellar_xdr::curr::TransactionEnvelope::TxFeeBump(fb) => {
+                // Fee bump transaction contains an inner transaction with its own operations.
+                match &fb.tx.inner_tx {
+                    stellar_xdr::curr::FeeBumpTransactionInnerTx::Tx(v1) => v1.tx.operations.len(),
+                }
+            }
+        }
+    } else {
+        // Fallback to a single operation if envelope missing
+        1
+    };
 
     let mut reports = Vec::new();
     let indices = match op_index {
