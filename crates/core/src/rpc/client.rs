@@ -3,7 +3,7 @@
 use crate::error::{PrismError, PrismResult};
 use crate::network::NetworkConfig;
 use crate::rpc::jsonrpc::{JsonRpcRequest, JsonRpcResponse};
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT};
+use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
@@ -121,10 +121,10 @@ impl SorobanRpcClient {
     pub fn new(config: &NetworkConfig) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        headers.insert(USER_AGENT, HeaderValue::from_static("Prism/0.1.0"));
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(config.request_timeout_secs))
+            .user_agent(concat!("prism-cli/", env!("CARGO_PKG_VERSION")))
             .default_headers(headers)
             .build()
             .expect("Failed to build reqwest client");
@@ -138,9 +138,9 @@ impl SorobanRpcClient {
     pub fn with_timeout(mut self, timeout_secs: u64) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        headers.insert(USER_AGENT, HeaderValue::from_static("Prism/0.1.0"));
         self.client = reqwest::Client::builder()
             .timeout(Duration::from_secs(timeout_secs))
+            .user_agent(concat!("prism-cli/", env!("CARGO_PKG_VERSION")))
             .default_headers(headers)
             .build()
             .expect("Failed to build reqwest client");

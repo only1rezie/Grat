@@ -92,14 +92,11 @@ impl JsonRpcTransport {
             reqwest::header::CONTENT_TYPE,
             reqwest::header::HeaderValue::from_static("application/json"),
         );
-        headers.insert(
-            reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_static("Prism/0.1.0"),
-        );
 
         Self {
             client: reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(30))
+                .user_agent(concat!("prism-cli/", env!("CARGO_PKG_VERSION")))
                 .default_headers(headers)
                 .build()
                 .expect("failed to build HTTP client"),
