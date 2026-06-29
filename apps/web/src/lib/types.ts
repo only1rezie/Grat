@@ -10,6 +10,7 @@ export interface DiagnosticReport {
   suggested_fixes: SuggestedFix[];
   contract_error?: ContractErrorInfo;
   transaction_context?: TransactionContext;
+  failing_contract_id?: string;
 }
 
 export interface RootCause {

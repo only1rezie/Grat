@@ -5,6 +5,7 @@ pub mod auth_signature;
 pub mod decode_context;
 pub mod contract_error;
 pub mod cross_contract;
+pub mod decode_context;
 pub mod diagnostic;
 pub mod host_error;
 pub mod mappings;
@@ -210,10 +211,13 @@ let ctx = decode_context::DecodeContextBuilder::new(network.clone()).build();
         let mut report = report::build_report(&error_info)?;
 
         if error_info.is_contract_error {
+            let ctx = crate::decode::decode_context::DecodeContext::builder()
+                .network(network.clone())
+                .build();
             if let Ok(contract_info) = contract_error::resolve(
                 &error_info.contract_id.unwrap_or_default(),
                 error_info.error_code,
-                network,
+                &ctx,
             )
             .await
             {
