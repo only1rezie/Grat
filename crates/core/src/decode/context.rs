@@ -88,13 +88,27 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
         }
     }
 
-    // 3. Get resource fee components from resultMetaXdr
+    // 3. Get resource fee components from resultMetaXdr or the pre-parsed fee payload.
     let mut non_refundable_fee = 0;
     let mut refundable_fee = 0;
     let mut rent_fee = 0;
     let mut has_soroban_meta = false;
 
-    if let Some(meta_xdr_b64) = tx_data.get("resultMetaXdr").and_then(|v| v.as_str()) {
+    if let Some(resource_fee_obj) = tx_data.get("resourceFee").and_then(|v| v.as_object()) {
+        non_refundable_fee = resource_fee_obj
+            .get("totalNonRefundableResourceFeeCharged")
+            .and_then(|v| v.as_i64)
+            .unwrap_or(0);
+        refundable_fee = resource_fee_obj
+            .get("totalRefundableResourceFeeCharged")
+            .and_then(|v| v.as_i64)
+            .unwrap_or(0);
+        rent_fee = resource_fee_obj
+            .get("rentFeeCharged")
+            .and_then(|v| v.as_i64)
+            .unwrap_or(0);
+        has_soroban_meta = true;
+    } else if let Some(meta_xdr_b64) = tx_data.get("resultMetaXdr").and_then(|v| v.as_str()) {
         if let Ok(tx_meta) = TransactionMeta::from_xdr_base64(meta_xdr_b64) {
             match tx_meta {
                 TransactionMeta::V3(v3) => {
@@ -121,7 +135,10 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
         0
     };
 
-    let inclusion_fee = total_fee - resource_fee;
+    let inclusion_fee = tx_data
+        .get("inclusionFee")
+        .and_then(|v| v.as_i64)
+        .unwrap_or(total_fee - resource_fee);
 
     FeeBreakdown {
         total_charged_fee: total_fee,
