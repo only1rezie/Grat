@@ -1,14 +1,11 @@
 
 
-use crate::decode::auth::{AuthChain, AuthCredential, AuthorizationType};
+use crate::decode::auth::{AuthChain, AuthCredential};
 use crate::decode::auth_signature::decode_auth_entry_signatures;
 use crate::error::PrismResult;
 use crate::types::report::{AuthEntryInfo, DiagnosticReport, FeeBreakdown, ResourceSummary, TransactionContext};
 use crate::xdr::codec::XdrCodec;
-use stellar_xdr::curr::{
-    FeeBumpTransactionInnerTx, LedgerEntryChange, Transaction, TransactionEnvelope, TransactionExt,
-    TransactionMeta, TransactionResult,
-};
+use stellar_xdr::curr::{TransactionEnvelope, TransactionMeta, TransactionResult};
 
 pub fn enrich_report(
     report: &mut DiagnosticReport,
@@ -101,15 +98,15 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
     if let Some(resource_fee_obj) = tx_data.get("resourceFee").and_then(|v| v.as_object()) {
         non_refundable_fee = resource_fee_obj
             .get("totalNonRefundableResourceFeeCharged")
-            .and_then(|v| v.as_i64)
+            .and_then(|v| v.as_i64())
             .unwrap_or(0);
         refundable_fee = resource_fee_obj
             .get("totalRefundableResourceFeeCharged")
-            .and_then(|v| v.as_i64)
+            .and_then(|v| v.as_i64())
             .unwrap_or(0);
         rent_fee = resource_fee_obj
             .get("rentFeeCharged")
-            .and_then(|v| v.as_i64)
+            .and_then(|v| v.as_i64())
             .unwrap_or(0);
         has_soroban_meta = true;
     } else if let Some(meta_xdr_b64) = tx_data.get("resultMetaXdr").and_then(|v| v.as_str()) {
@@ -141,7 +138,7 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
 
     let inclusion_fee = tx_data
         .get("inclusionFee")
-        .and_then(|v| v.as_i64)
+        .and_then(|v| v.as_i64())
         .unwrap_or(total_fee - resource_fee);
 
     FeeBreakdown {
@@ -149,105 +146,50 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
         inclusion_fee,
         resource_fee,
         refundable_fee: refundable_fee + rent_fee,
-        non_refundable_resource_fee: non_refundable_fee,
+        non_refundable_fee,
         bid_fee,
     }
 }
 
 fn extract_resource_summary(tx_data: &serde_json::Value) -> ResourceSummary {
-    let mut summary = ResourceSummary {
-        cpu_instructions_used: 0,
-        cpu_instructions_limit: 0,
-        memory_bytes_used: 0,
-        memory_bytes_limit: 0,
-        read_bytes: 0,
-        read_limit: 0,
+    let mut cpu_used = 0;
+    let mut cpu_limit = 0;
+    let mut mem_used = 0;
+    let mut mem_limit = 0;
+    let mut read_used = 0;
+    let mut read_limit = 0;
+
+    if let Some(events) = tx_data.get("diagnosticEvents").and_then(|e| e.as_array()) {
+        for event in events {
+            if event.get("type").and_then(|t| t.as_str()) == Some("budget") {
+                if let Some(data) = event.get("data") {
+                    let category = data.get("category").and_then(|c| c.as_str()).unwrap_or("");
+                    let used = data.get("used").and_then(|u| u.as_u64()).unwrap_or(0);
+                    let limit = data.get("limit").and_then(|l| l.as_u64()).unwrap_or(0);
+
+                    if category == "cpu" {
+                        cpu_used = used;
+                        cpu_limit = limit;
+                    } else if category == "memory" {
+                        mem_used = used;
+                        mem_limit = limit;
+                    } else if category == "read" {
+                        read_used = used;
+                        read_limit = limit;
+                    }
+                }
+            }
+        }
+    }
+
+    ResourceSummary {
+        cpu_instructions_used: cpu_used,
+        cpu_instructions_limit: cpu_limit,
+        memory_bytes_used: mem_used,
+        memory_bytes_limit: mem_limit,
+        read_bytes: read_used,
+        read_bytes_limit: read_limit,
         write_bytes: 0,
-        write_limit: 0,
-    };
-
-    if let Some(meta_xdr_b64) = tx_data.get("resultMetaXdr").and_then(|v| v.as_str()) {
-        if let Ok(tx_meta) = TransactionMeta::from_xdr_base64(meta_xdr_b64) {
-            if let TransactionMeta::V3(v3) = tx_meta {
-                // Compute total write bytes from ledger entry changes:
-                // we sum the XDR-serialized size of every Created and Updated entry.
-                let mut write_bytes: u64 = 0;
-                let mut read_bytes: u64 = 0;
-
-                // Helper: compute size of a LedgerEntry's data payload.
-                let entry_size = |entry: &stellar_xdr::curr::LedgerEntry| -> u64 {
-                    XdrCodec::to_xdr_bytes(entry).unwrap_or_default().len() as u64
-                };
-
-                // tx_changes_before — entries that existed before (state snapshot)
-                for change in v3.tx_changes_before.iter() {
-                    if let Ok(entry) = ledger_entry_from_change(change) {
-                        read_bytes += entry_size(&entry);
-                    }
-                }
-
-                // per-operation changes
-                for op in v3.operations.iter() {
-                    for change in op.changes.iter() {
-                        match change {
-                            LedgerEntryChange::LedgerEntryCreated(entry) => {
-                                write_bytes += entry_size(entry);
-                            }
-                            LedgerEntryChange::LedgerEntryUpdated(entry) => {
-                                write_bytes += entry_size(entry);
-                            }
-                            LedgerEntryChange::LedgerEntryRemoved(key) => {
-                                if let Ok(key_bytes) = XdrCodec::to_xdr_bytes(key) {
-                                    read_bytes += key_bytes.len() as u64;
-                                }
-                            }
-                            LedgerEntryChange::LedgerEntryState(entry) => {
-                                read_bytes += entry_size(entry);
-                            }
-                        }
-                    }
-                }
-
-                // tx_changes_after — final state (duplicates some operation data, skip to avoid double-count)
-
-                summary.read_bytes = read_bytes;
-                summary.write_bytes = write_bytes;
-            }
-        }
-    }
-
-    // Extract read/write limits from the transaction envelope's SorobanTransactionData
-    if let Some(envelope_xdr_b64) = tx_data.get("envelopeXdr").and_then(|v| v.as_str()) {
-        if let Ok(tx_envelope) = TransactionEnvelope::from_xdr_base64(envelope_xdr_b64) {
-            let inner_tx = inner_transaction(&tx_envelope);
-            if let TransactionExt::V1(soroban_data) = &inner_tx.ext {
-                summary.read_limit = soroban_data.resources.read_bytes as u64;
-                summary.write_limit = soroban_data.resources.write_bytes as u64;
-            }
-        }
-    }
-
-    summary
-}
-
-/// Extract the inner Transaction from any envelope variant.
-fn inner_transaction(envelope: &TransactionEnvelope) -> &Transaction {
-    match envelope {
-        TransactionEnvelope::TxV0(v0) => &v0.tx,
-        TransactionEnvelope::Tx(v1) => &v1.tx,
-        TransactionEnvelope::TxFeeBump(fb) => match &fb.tx.inner_tx {
-            FeeBumpTransactionInnerTx::Tx(v1) => &v1.tx,
-        },
-    }
-}
-
-/// Extract a LedgerEntry from any LedgerEntryChange if the variant carries one.
-fn ledger_entry_from_change(change: &LedgerEntryChange) -> Result<stellar_xdr::curr::LedgerEntry, ()> {
-    match change {
-        LedgerEntryChange::LedgerEntryCreated(entry)
-        | LedgerEntryChange::LedgerEntryUpdated(entry)
-        | LedgerEntryChange::LedgerEntryState(entry) => Ok(entry.clone()),
-        _ => Err(()),
     }
 }
 
@@ -318,6 +260,79 @@ mod tests {
     };
 
     #[test]
+    fn test_extract_resource_summary_read() {
+        let tx_data = serde_json::json!({
+            "diagnosticEvents": [
+                {
+                    "type": "budget",
+                    "data": {
+                        "category": "read",
+                        "used": 12345,
+                        "limit": 100000
+                    }
+                }
+            ]
+        });
+        let result = extract_resource_summary(&tx_data);
+        assert_eq!(result.read_bytes, 12345);
+        assert_eq!(result.read_bytes_limit, 100000);
+        assert_eq!(result.cpu_instructions_used, 0);
+        assert_eq!(result.memory_bytes_used, 0);
+    }
+
+    #[test]
+    fn test_extract_resource_summary_empty() {
+        let tx_data = serde_json::json!({});
+        let result = extract_resource_summary(&tx_data);
+        assert_eq!(result.read_bytes, 0);
+        assert_eq!(result.read_bytes_limit, 0);
+        assert_eq!(result.cpu_instructions_used, 0);
+        assert_eq!(result.memory_bytes_used, 0);
+    }
+
+    #[test]
+    fn test_extract_resource_summary_cpu_regression() {
+        let tx_data = serde_json::json!({
+            "diagnosticEvents": [
+                {
+                    "type": "budget",
+                    "data": {
+                        "category": "cpu",
+                        "used": 5000,
+                        "limit": 10000
+                    }
+                }
+            ]
+        });
+        let result = extract_resource_summary(&tx_data);
+        assert_eq!(result.cpu_instructions_used, 5000);
+        assert_eq!(result.cpu_instructions_limit, 10000);
+        assert_eq!(result.read_bytes, 0);
+        assert_eq!(result.read_bytes_limit, 0);
+    }
+
+    #[test]
+    fn test_extract_resource_summary_unknown_category() {
+        let tx_data = serde_json::json!({
+            "diagnosticEvents": [
+                {
+                    "type": "budget",
+                    "data": {
+                        "category": "unknown_category",
+                        "used": 999,
+                        "limit": 9999
+                    }
+                }
+            ]
+        });
+        let result = extract_resource_summary(&tx_data);
+        assert_eq!(result.read_bytes, 0);
+        assert_eq!(result.read_bytes_limit, 0);
+        assert_eq!(result.cpu_instructions_used, 0);
+        assert_eq!(result.memory_bytes_used, 0);
+    }
+
+    #[test]
     fn test_extract_fee_breakdown_non_soroban() {
         let tx = Transaction {
             source_account: MuxedAccount::Ed25519(Uint256([0; 32])),
@@ -352,7 +367,7 @@ mod tests {
         assert_eq!(breakdown.inclusion_fee, 120);
         assert_eq!(breakdown.resource_fee, 0);
         assert_eq!(breakdown.refundable_fee, 0);
-        assert_eq!(breakdown.non_refundable_resource_fee, 0);
+        assert_eq!(breakdown.non_refundable_fee, 0);
     }
 
     #[test]
@@ -410,7 +425,7 @@ mod tests {
         assert_eq!(breakdown.resource_fee, 350); // 100 + 200 + 50
         assert_eq!(breakdown.inclusion_fee, 100); // 450 - 350
         assert_eq!(breakdown.refundable_fee, 250); // 200 + 50
-        assert_eq!(breakdown.non_refundable_resource_fee, 100);
+        assert_eq!(breakdown.non_refundable_fee, 100);
     }
 
     // ── auth_entries extraction tests ──────────────────────────────────────────

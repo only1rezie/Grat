@@ -2,7 +2,7 @@ use prism_core::types::report::DiagnosticReport;
 
 use crate::output::renderers::{
     render_cause_list, render_error_card, render_fix_list, render_section_header,
-    render_fee_breakdown, render_resource_summary,
+    BudgetBar, render_fee_breakdown,
 };
 
 pub fn print_report(report: &DiagnosticReport) -> anyhow::Result<()> {
@@ -18,7 +18,34 @@ pub fn print_report(report: &DiagnosticReport) -> anyhow::Result<()> {
 
     if let Some(context) = &report.transaction_context {
         println!();
-        print!("{}", render_resource_summary(&context.resources));
+        println!("{}", render_section_header("Resource Usage"));
+        println!(
+            "{}",
+            BudgetBar::new(
+                "CPU",
+                context.resources.cpu_instructions_used,
+                context.resources.cpu_instructions_limit
+            )
+            .render()
+        );
+        println!(
+            "{}",
+            BudgetBar::new(
+                "RAM",
+                context.resources.memory_bytes_used,
+                context.resources.memory_bytes_limit
+            )
+            .render()
+        );
+        println!(
+            "{}",
+            BudgetBar::new(
+                "Read",
+                context.resources.read_bytes,
+                context.resources.read_bytes_limit
+            )
+            .render()
+        );
         println!();
         print!("{}", render_fee_breakdown(&context.fee));
     }
