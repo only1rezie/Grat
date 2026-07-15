@@ -1,4 +1,4 @@
-# Prism
+# Grat
 
 <p align="center">
   <img src="https://img.shields.io/badge/Rust-1.77+-orange?style=for-the-badge&logo=rust" alt="Rust 1.77" />
@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Documentation-Live-blue?style=for-the-badge&logo=gitbook&logoColor=white" alt="Docs" />
 </p>
 
-**Prism** is a developer tool that makes Soroban smart contract errors easy to understand. It takes raw, cryptic error codes from failed transactions and turns them into plain English explanations with suggested fixes. It also lets developers replay past transactions step by step to see exactly what went wrong and why, so they can find and fix the problem in seconds instead of guessing.
+**Grat** is a developer tool that makes Soroban smart contract errors easy to understand. It takes raw, cryptic error codes from failed transactions and turns them into plain English explanations with suggested fixes. It also lets developers replay past transactions step by step to see exactly what went wrong and why, so they can find and fix the problem in seconds instead of guessing.
 
 ## Features
 
@@ -21,7 +21,7 @@
 
 ## Architecture
 
-Prism is organized as a modular monorepo:
+Grat is organized as a modular monorepo:
 
 - **Core Library (`crates/core`)**: The shared Rust engine for decoding, replaying, and debugging.
 - **CLI (`crates/cli`)**: Powerful command-line interface for terminal-native diagnostics.
