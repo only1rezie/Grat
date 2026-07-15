@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "crates/core",
     "crates/cli",
-    "crates/wasm", "scratch/xdr_test",
+    "crates/wasm",
 ]
 
 [workspace.lints.rust]
