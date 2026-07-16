@@ -12,7 +12,7 @@ use crate::error::GratResult;
 use crate::types::report::{DiagnosticReport, FailureAttribution};
 use crate::xdr::codec::XdrCodec;
 
-___RUST_DOC_COMMENT___
+///
 #[derive(Debug, Clone)]
 struct CallFrame {
     contract_address: String,
@@ -20,8 +20,8 @@ struct CallFrame {
     depth: usize,
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
 pub fn attribute_failure(
     report: &mut DiagnosticReport,
     tx_data: &serde_json::Value,

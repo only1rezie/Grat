@@ -2,15 +2,15 @@
 
 use serde::{Deserialize, Serialize};
 
-___RUST_DOC_COMMENT___
+///
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AuthEntryInfo {
-___RUST_DOC_COMMENT___    
+///    
     pub auth_type: String,
-___RUST_DOC_COMMENT___    
+///    
     pub address: String,
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub contract_id: Option<String>,
 }
@@ -84,14 +84,14 @@ pub struct TransactionContext {
 pub struct FeeBreakdown {
     pub total_charged_fee: i64,
     pub inclusion_fee: i64,
-___RUST_DOC_COMMENT___    
+///    
     pub resource_fee: i64,
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
+///    
     pub refundable_resource_fee: i64,
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     pub refundable_fee: i64,
     pub non_refundable_fee: i64,
     pub bid_fee: Option<i64>,
@@ -108,16 +108,16 @@ pub struct ResourceSummary {
     pub write_bytes: u64,
 }
 
-___RUST_DOC_COMMENT___
+///
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailureAttribution {
-___RUST_DOC_COMMENT___    
+///    
     pub contract_address: String,
-___RUST_DOC_COMMENT___    
+///    
     pub function_name: Option<String>,
-___RUST_DOC_COMMENT___    
+///    
     pub call_depth: usize,
-___RUST_DOC_COMMENT___    
+///    
     pub origin_description: String,
 }
 
@@ -146,22 +146,22 @@ pub struct DiagnosticReport {
 
     pub related_errors: Vec<String>,
 
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     pub cross_contract_attribution: Option<FailureAttribution>,
 
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub auth_signatures: Vec<String>,
 
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub auth_entries: Vec<AuthEntryInfo>,
 
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub failing_contract_id: Option<String>,
 

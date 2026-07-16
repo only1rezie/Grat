@@ -112,40 +112,40 @@ fn registry() -> &'static Mutex<RpcMetricsRegistry> {
     REGISTRY.get_or_init(|| Mutex::new(RpcMetricsRegistry::default()))
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
 pub fn record_rpc_duration(method: &str, duration_secs: f64, success: bool) {
     if let Ok(mut reg) = registry().lock() {
         reg.record(method, duration_secs, success);
     }
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
 pub fn gather() -> String {
     registry()
         .lock()

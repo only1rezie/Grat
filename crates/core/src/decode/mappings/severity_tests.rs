@@ -1,6 +1,6 @@
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
 #[cfg(test)]
 mod tests {
     use crate::decode::mappings::{budget, context, value};

@@ -36,32 +36,32 @@ use stellar_xdr::curr::{
     ContractEventBody, ContractEventType, DiagnosticEvent, Hash, ScVal,
 };
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
+///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DiagnosticEventKind {
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     Contract,
 
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     System,
 
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     Debug,
 
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     Unknown,
 }
 
 impl DiagnosticEventKind {
-___RUST_DOC_COMMENT___    
+///    
     fn from_contract_event_type(t: &ContractEventType) -> Self {
         match t {
             ContractEventType::Contract => Self::Contract,

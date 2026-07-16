@@ -190,9 +190,9 @@ fn extract_resource_summary(tx_data: &serde_json::Value) -> ResourceSummary {
     }
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
 fn extract_auth_signatures(tx_data: &serde_json::Value) -> Vec<String> {
     let mut signatures = Vec::new();
 
@@ -207,11 +207,11 @@ fn extract_auth_signatures(tx_data: &serde_json::Value) -> Vec<String> {
     signatures
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
+///
+///
 fn extract_auth_entries(tx_data: &serde_json::Value) -> Vec<AuthEntryInfo> {
     let mut entries = Vec::new();
 
@@ -230,8 +230,8 @@ fn extract_auth_entries(tx_data: &serde_json::Value) -> Vec<AuthEntryInfo> {
     entries
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
 fn auth_entry_info_from_chain(chain: &AuthChain) -> Option<AuthEntryInfo> {
     match &chain.credential {
         AuthCredential::SourceAccount => None,
@@ -425,7 +425,7 @@ mod tests {
         assert_eq!(breakdown.non_refundable_fee, 100);
     }
 
-___RUST_DOC_COMMENT___    
+///    
     fn ed25519_auth_entry_b64(nonce: i64) -> String {
         use stellar_xdr::curr::{
             AccountId, Hash, InvokeContractArgs, PublicKey, ScAddress, ScSymbol, ScVal,
@@ -453,7 +453,7 @@ ___RUST_DOC_COMMENT___
         XdrCodec::to_xdr_base64(&entry).expect("encode")
     }
 
-___RUST_DOC_COMMENT___    
+///    
     fn smart_wallet_auth_entry_b64(nonce: i64) -> String {
         use stellar_xdr::curr::{
             Hash, InvokeContractArgs, ScAddress, ScSymbol, ScVal, SorobanAddressCredentials,

@@ -26,17 +26,17 @@ impl CacheCategory {
     }
 }
 
-___RUST_DOC_COMMENT___
+///
 pub struct CacheStore {
-___RUST_DOC_COMMENT___    
+///    
     cache_dir: PathBuf,
-___RUST_DOC_COMMENT___    
+///    
     #[allow(dead_code)]
     max_size: u64,
 }
 
 impl CacheStore {
-___RUST_DOC_COMMENT___    
+///    
     pub fn new(cache_dir: PathBuf, max_size_mb: u64) -> GratResult<Self> {
         std::fs::create_dir_all(&cache_dir)
             .map_err(|e| GratError::CacheError(format!("Failed to create cache dir: {e}")))?;
@@ -47,7 +47,7 @@ ___RUST_DOC_COMMENT___
         })
     }
 
-___RUST_DOC_COMMENT___    
+///    
     pub fn default_location() -> GratResult<Self> {
         let project_dirs =
             directories::ProjectDirs::from("dev", "grat", "grat").ok_or_else(|| {
@@ -57,7 +57,7 @@ ___RUST_DOC_COMMENT___
         Self::new(project_dirs.cache_dir().to_path_buf(), 512)
     }
 
-___RUST_DOC_COMMENT___    
+///    
     pub fn put(&self, category: CacheCategory, key: &str, value: &[u8]) -> GratResult<()> {
         if value.len() as u64 > self.max_size {
             return Err(GratError::CacheError(format!(
@@ -76,7 +76,7 @@ ___RUST_DOC_COMMENT___
         Ok(())
     }
 
-___RUST_DOC_COMMENT___    
+///    
     pub fn get(&self, category: CacheCategory, key: &str) -> GratResult<Option<Vec<u8>>> {
         let path = self.entry_path(category, key);
         if path.exists() {
@@ -88,12 +88,12 @@ ___RUST_DOC_COMMENT___
         }
     }
 
-___RUST_DOC_COMMENT___    
+///    
     pub fn contains(&self, category: CacheCategory, key: &str) -> bool {
         self.entry_path(category, key).exists()
     }
 
-___RUST_DOC_COMMENT___    
+///    
     pub fn remove(&self, category: CacheCategory, key: &str) -> GratResult<()> {
         let path = self.entry_path(category, key);
         if path.exists() {
@@ -104,7 +104,7 @@ ___RUST_DOC_COMMENT___
         Ok(())
     }
 
-___RUST_DOC_COMMENT___    
+///    
     pub fn clear(&self) -> GratResult<()> {
         if self.cache_dir.exists() {
             std::fs::remove_dir_all(&self.cache_dir)
@@ -116,7 +116,7 @@ ___RUST_DOC_COMMENT___
         Ok(())
     }
 
-___RUST_DOC_COMMENT___    
+///    
     fn entry_path(&self, category: CacheCategory, key: &str) -> PathBuf {
         self.cache_dir.join(category.as_str()).join(key)
     }

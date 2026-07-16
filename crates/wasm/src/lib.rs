@@ -7,15 +7,15 @@ use grat_core::types::report::DiagnosticReport;
 use grat_core::xdr::codec::XdrCodec;
 use wasm_bindgen::prelude::*;
 
-___RUST_DOC_COMMENT___
+///
 #[wasm_bindgen(start)]
 pub fn init() {
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
+///
 #[wasm_bindgen]
 pub fn decode_error(tx_result_json: &str) -> Result<JsValue, JsValue> {
     let report = decode_report_inner(tx_result_json)
@@ -214,7 +214,7 @@ fn classify(parsed: &serde_json::Value) -> Result<ClassifiedError, String> {
     })
 }
 
-___RUST_DOC_COMMENT___
+///
 #[wasm_bindgen]
 pub fn resolve_contract_error(wasm_bytes: &[u8], error_code: u32) -> Result<JsValue, JsValue> {
     let _ = (wasm_bytes, error_code);
@@ -222,7 +222,7 @@ pub fn resolve_contract_error(wasm_bytes: &[u8], error_code: u32) -> Result<JsVa
     serde_wasm_bindgen::to_value(&result).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-___RUST_DOC_COMMENT___
+///
 #[wasm_bindgen]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()

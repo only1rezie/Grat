@@ -4,8 +4,8 @@ use stellar_xdr::curr::{
     SorobanCredentials,
 };
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
 pub fn decode_signature_bytes(bytes: &[u8]) -> String {
     if bytes.is_empty() {
         return "<invalid: empty signature>".to_string();
@@ -16,9 +16,9 @@ pub fn decode_signature_bytes(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
 pub fn decode_auth_entry_signatures(auth_entry_b64: &str) -> Vec<String> {
     let bytes = match STANDARD.decode(auth_entry_b64) {
         Ok(b) => b,
@@ -38,8 +38,8 @@ pub fn decode_auth_entry_signatures(auth_entry_b64: &str) -> Vec<String> {
     }
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
 fn extract_signatures_from_scval(val: &ScVal) -> Vec<String> {
     match val {
         

@@ -90,22 +90,22 @@ impl std::fmt::Display for ErrorCategory {
     }
 }
 
-___RUST_DOC_COMMENT___
+///
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaxonomySchema {
-___RUST_DOC_COMMENT___    
+///    
     pub category: CategoryMeta,
-___RUST_DOC_COMMENT___    
+///    
     pub errors: Vec<TaxonomyEntry>,
 }
 
-___RUST_DOC_COMMENT___
+///
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CategoryMeta {
-___RUST_DOC_COMMENT___    
+///    
     pub name: String,
-___RUST_DOC_COMMENT___    
+///    
     pub description: String,
-___RUST_DOC_COMMENT___    
+///    
     pub source_module: String,
 }

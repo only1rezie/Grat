@@ -394,7 +394,7 @@ mod tests {
     fn make_client(addr: std::net::SocketAddr) -> SorobanRpcClient {
         let config = NetworkConfig {
             network: crate::network::Network::Testnet,
-            rpc_url: format!("http:
+            rpc_url: format!("http://{}", addr),
             network_passphrase: "test".to_string(),
             archive_urls: vec![],
             api_key: None,

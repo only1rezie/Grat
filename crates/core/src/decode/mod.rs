@@ -27,11 +27,11 @@ use crate::types::report::DiagnosticReport;
 use crate::xdr::codec::XdrCodec;
 use stellar_xdr::curr::{ScVal, SorobanTransactionMetaExt, TransactionMeta, TransactionResult};
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
+///
+///
 fn parse_v3_metadata(tx_data: &mut serde_json::Value) -> GratResult<()> {
 
     let mut total_fee = None;

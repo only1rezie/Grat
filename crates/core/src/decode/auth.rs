@@ -17,17 +17,17 @@ use stellar_xdr::curr::{
     SorobanCredentials, Uint256,
 };
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
+///
+///
+///
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthorizationType {
-___RUST_DOC_COMMENT___    
+///    
     Ed25519,
-___RUST_DOC_COMMENT___    
+///    
     SmartWallet,
 }
 
@@ -45,78 +45,78 @@ impl std::fmt::Display for AuthorizationType {
 #[serde(rename_all = "snake_case", tag = "kind")]
 pub enum AuthCredential {
     /// Authorized implicitly by the transaction's source account — no nonce or
-___RUST_DOC_COMMENT___    
+///    
     SourceAccount,
-___RUST_DOC_COMMENT___    
+///    
     Address(AddressCredential),
 }
 
-___RUST_DOC_COMMENT___
+///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AddressCredential {
-___RUST_DOC_COMMENT___    
+///    
     pub address: String,
-___RUST_DOC_COMMENT___    
+///    
     pub auth_type: AuthorizationType,
-___RUST_DOC_COMMENT___    
-___RUST_DOC_COMMENT___    
+///    
+///    
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub contract_id: Option<String>,
-___RUST_DOC_COMMENT___    
+///    
     pub nonce: i64,
-___RUST_DOC_COMMENT___    
+///    
     pub signature_expiration_ledger: u32,
-___RUST_DOC_COMMENT___    
+///    
     pub signed: bool,
 }
 
-___RUST_DOC_COMMENT___
+///
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthFunctionKind {
-___RUST_DOC_COMMENT___    
+///    
     ContractFn,
-___RUST_DOC_COMMENT___    
+///    
     CreateContract,
 }
 
-___RUST_DOC_COMMENT___
+///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AuthInvocation {
-___RUST_DOC_COMMENT___    
+///    
     pub depth: usize,
-___RUST_DOC_COMMENT___    
+///    
     pub kind: AuthFunctionKind,
-___RUST_DOC_COMMENT___    
+///    
     pub contract: Option<String>,
-___RUST_DOC_COMMENT___    
+///    
     pub function: Option<String>,
-___RUST_DOC_COMMENT___    
+///    
     pub arg_count: usize,
-___RUST_DOC_COMMENT___    
+///    
     pub args: Vec<String>,
-___RUST_DOC_COMMENT___    
+///    
     pub target: String,
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AuthChain {
-___RUST_DOC_COMMENT___    
+///    
     pub credential: AuthCredential,
-___RUST_DOC_COMMENT___    
+///    
     pub invocations: Vec<AuthInvocation>,
 }
 
 impl AuthChain {
-___RUST_DOC_COMMENT___    
+///    
     pub fn from_xdr_base64(b64: &str) -> GratResult<Self> {
         let entry = SorobanAuthorizationEntry::from_xdr_base64(b64)?;
         Ok(Self::from_entry(&entry))
     }
 
-___RUST_DOC_COMMENT___    
+///    
     pub fn from_entry(entry: &SorobanAuthorizationEntry) -> Self {
         let credential = parse_credential(&entry.credentials);
         let mut invocations = Vec::new();
@@ -128,8 +128,8 @@ ___RUST_DOC_COMMENT___
     }
 }
 
-___RUST_DOC_COMMENT___
-___RUST_DOC_COMMENT___
+///
+///
 fn parse_credential(credentials: &SorobanCredentials) -> AuthCredential {
     match credentials {
         SorobanCredentials::SourceAccount => AuthCredential::SourceAccount,
@@ -155,7 +155,7 @@ fn parse_address_credential(creds: &SorobanAddressCredentials) -> AddressCredent
     }
 }
 
-___RUST_DOC_COMMENT___
+///
 fn walk_invocation(
     invocation: &SorobanAuthorizedInvocation,
     depth: usize,
@@ -199,7 +199,7 @@ fn parse_function(function: &SorobanAuthorizedFunction, depth: usize) -> AuthInv
     }
 }
 
-___RUST_DOC_COMMENT___
+///
 pub fn scval_to_readable_string(val: &ScVal) -> String {
     match val {
         ScVal::Void => "void".to_string(),
@@ -243,7 +243,7 @@ pub fn scval_to_readable_string(val: &ScVal) -> String {
     }
 }
 
-___RUST_DOC_COMMENT___
+///
 pub(crate) fn scaddress_to_strkey(address: &ScAddress) -> String {
     match address {
         ScAddress::Account(AccountId(PublicKey::PublicKeyTypeEd25519(Uint256(bytes)))) => {
