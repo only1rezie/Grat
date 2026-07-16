@@ -506,6 +506,7 @@ mod tests {
                 error_code: 1,
                 error_name: Some("InsufficientBalance".to_string()),
                 doc_comment: Some("User attempted transfer with insufficient balance".to_string()),
+                learn_more: String::new(),
             }),
             transaction_context: None,
             related_errors: Vec::new(),
@@ -596,6 +597,7 @@ mod tests {
                 read_bytes_limit: 10000,
                 write_bytes: 500,
             },
+            return_value: None,
         };
 
         let output = render_context_table(&context);
