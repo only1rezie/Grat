@@ -1,6 +1,5 @@
 use crate::types::report::Severity;
 
-///
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ContractErrorDetail {
     pub code: u32,

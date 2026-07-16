@@ -2,32 +2,19 @@ use serde::{Deserialize, Serialize};
 use stellar_strkey::Contract as StrkeyContract;
 use stellar_xdr::curr::{ContractEventBody, ContractEventType, DiagnosticEvent, Hash, ScVal};
 
-///
-///
-///
-///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DiagnosticEventKind {
-    ///    
-    ///    
     Contract,
 
-    ///    
-    ///    
     System,
 
-    ///    
-    ///    
     Debug,
 
-    ///    
-    ///    
     Unknown,
 }
 
 impl DiagnosticEventKind {
-    ///    
     fn from_contract_event_type(t: &ContractEventType) -> Self {
         match t {
             ContractEventType::Contract => Self::Contract,
@@ -50,7 +37,6 @@ impl std::fmt::Display for DiagnosticEventKind {
 
 /// A fully-parsed, strongly-typed representation of a single Soroban
 /// diagnostic event.
-///
 /// All fields are extracted from the raw XDR envelope during the walk.
 /// No data is discarded — if the event body cannot be fully decoded the
 /// [`Self::kind`] is set to [`DiagnosticEventKind::Unknown`] and the
@@ -61,28 +47,23 @@ pub struct StructuredDiagnosticEvent {
     pub kind: DiagnosticEventKind,
 
     /// Optional strkey-encoded contract identifier (`C…` Stellar address).
-    ///
     /// `None` when the event was emitted by the host rather than a specific
     /// contract (common for [`DiagnosticEventKind::System`] events).
     pub contract_id: Option<String>,
 
     /// Ordered topic vector extracted from the event body.
-    ///
     /// Always present (may be empty) for well-formed events.
     pub topics: Vec<ScVal>,
 
     /// Payload data from the event body.
-    ///
     /// [`ScVal::Void`] when the body cannot be decoded.
     pub data: ScVal,
 
     /// Whether this event occurred within a *successful* contract call frame.
-    ///
     /// Mapped 1-to-1 from [`DiagnosticEvent::in_successful_contract_call`].
     pub in_successful_call: bool,
 
     /// Human-readable parse error, set only when the XDR body is malformed.
-    ///
     /// `None` for every well-formed event.
     pub parse_error: Option<String>,
 }
@@ -101,14 +82,11 @@ impl StructuredDiagnosticEvent {
 
 /// Walks a collection of raw [`DiagnosticEvent`] records and maps them into
 /// an ordered [`Vec<StructuredDiagnosticEvent>`].
-///
 /// The walker is zero-copy in the sense that it does not clone or buffer the
 /// input: it iterates exactly once and processes each item in place.
 /// `ScVal` values *are* cloned into the output structs so they can be freely
 /// moved around the call-site without a lifetime dependency on the input.
-///
 /// # Guarantees
-///
 /// - Output length **always equals** input length (zero-data-loss).
 /// - No `panic!` — all error paths produce an [`DiagnosticEventKind::Unknown`]
 ///   record with a [`StructuredDiagnosticEvent::parse_error`] message.
@@ -116,7 +94,6 @@ pub struct DiagnosticEventWalker;
 
 impl DiagnosticEventWalker {
     /// Create a new walker instance.
-    ///
     /// The walker is stateless; you may re-use a single instance for multiple
     /// walks.
     pub fn new() -> Self {
@@ -124,12 +101,9 @@ impl DiagnosticEventWalker {
     }
 
     /// Walk `events` and return an ordered, typed collection.
-    ///
     /// Accepts any iterator whose item is a reference to a [`DiagnosticEvent`].
     /// The returned vector preserves the original ordering.
-    ///
     /// # Panics
-    ///
     /// Never panics.
     pub fn walk<'a, I>(&self, events: I) -> Vec<StructuredDiagnosticEvent>
     where
@@ -143,7 +117,6 @@ impl DiagnosticEventWalker {
     // ------------------------------------------------------------------
 
     /// Map a single raw [`DiagnosticEvent`] to its structured counterpart.
-    ///
     /// On any extraction failure the record is emitted with
     /// [`DiagnosticEventKind::Unknown`] and the error message is captured in
     /// [`StructuredDiagnosticEvent::parse_error`].
@@ -180,11 +153,9 @@ impl DiagnosticEventWalker {
     /// Given a slice of diagnostic events, returns the ContractId (as a
     /// strkey-encoded `C…` string) of the contract that emitted the final
     /// failure event.
-    ///
     /// A "failure event" is one where `in_successful_contract_call` is `false`
     /// **and** the event carries a `contract_id`. Events are walked in reverse
     /// order so the last-emitted failure is found first.
-    ///
     /// Returns `None` when no such event exists.
     pub fn find_failing_contract(events: &[DiagnosticEvent]) -> Option<String> {
         for event in events.iter().rev() {
@@ -214,7 +185,6 @@ impl Default for DiagnosticEventWalker {
 // ---------------------------------------------------------------------------
 
 /// Walk `events` with a default [`DiagnosticEventWalker`].
-///
 /// Convenience wrapper; prefer constructing the walker explicitly when you
 /// need to call it multiple times in a hot path.
 pub fn walk_diagnostic_events(events: &[DiagnosticEvent]) -> Vec<StructuredDiagnosticEvent> {
@@ -230,7 +200,7 @@ mod tests {
     use super::*;
     use stellar_xdr::curr::{
         ContractEvent, ContractEventBody, ContractEventType, ContractEventV0, DiagnosticEvent,
-        ExtensionPoint, Hash, ScSymbol, ScVal, ScVec, VecM,
+        ExtensionPoint, Hash, ScSymbol, ScVal, VecM,
     };
 
     // -----------------------------------------------------------------------

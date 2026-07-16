@@ -31,7 +31,6 @@ impl<T: Serialize> JsonRpcRequest<T> {
 }
 
 /// JSON-RPC 2.0 response envelope.
-///
 /// `T` is the method-specific result struct; it must implement [`Deserialize`].
 #[derive(Debug, Deserialize)]
 pub struct JsonRpcResponse<T> {
@@ -77,7 +76,6 @@ pub struct EmptyParams {}
 pub type GetHealthParams = EmptyParams;
 
 /// Low-level JSON-RPC HTTP transport.
-///
 /// Handles serialization, deserialization, retry, and rate-limit backoff.
 /// Higher-level clients (e.g. [`super::rpc::RpcClient`]) build on top of this.
 pub struct JsonRpcTransport {
@@ -108,12 +106,10 @@ impl JsonRpcTransport {
     }
 
     /// Execute a typed JSON-RPC call and return the typed result.
-    ///
     /// Retries are triggered by:
     /// - Transport-level failures (connection refused, timeout, etc.)
     /// - HTTP 429 Too Many Requests
     /// - HTTP 5xx Server Errors (500–599)
-    ///
     /// Backoff follows `BASE_DELAY_MS × 2^attempt`, capped at `MAX_DELAY_MS`.
     pub async fn call<P, R>(&self, request: &JsonRpcRequest<P>) -> GratResult<R>
     where

@@ -7,17 +7,10 @@ use stellar_xdr::curr::{
     SorobanCredentials, Uint256,
 };
 
-///
-///
-///
-///
-///
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthorizationType {
-    ///    
     Ed25519,
-    ///    
     SmartWallet,
 }
 
@@ -35,78 +28,51 @@ impl std::fmt::Display for AuthorizationType {
 #[serde(rename_all = "snake_case", tag = "kind")]
 pub enum AuthCredential {
     /// Authorized implicitly by the transaction's source account — no nonce or
-    ///    
     SourceAccount,
-    ///    
     Address(AddressCredential),
 }
 
-///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AddressCredential {
-    ///    
     pub address: String,
-    ///    
     pub auth_type: AuthorizationType,
-    ///    
-    ///    
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub contract_id: Option<String>,
-    ///    
     pub nonce: i64,
-    ///    
     pub signature_expiration_ledger: u32,
-    ///    
     pub signed: bool,
 }
 
-///
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthFunctionKind {
-    ///    
     ContractFn,
-    ///    
     CreateContract,
 }
 
-///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AuthInvocation {
-    ///    
     pub depth: usize,
-    ///    
     pub kind: AuthFunctionKind,
-    ///    
     pub contract: Option<String>,
-    ///    
     pub function: Option<String>,
-    ///    
     pub arg_count: usize,
-    ///    
     pub args: Vec<String>,
-    ///    
     pub target: String,
 }
 
-///
-///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AuthChain {
-    ///    
     pub credential: AuthCredential,
-    ///    
     pub invocations: Vec<AuthInvocation>,
 }
 
 impl AuthChain {
-    ///    
     pub fn from_xdr_base64(b64: &str) -> GratResult<Self> {
         let entry = SorobanAuthorizationEntry::from_xdr_base64(b64)?;
         Ok(Self::from_entry(&entry))
     }
 
-    ///    
     pub fn from_entry(entry: &SorobanAuthorizationEntry) -> Self {
         let credential = parse_credential(&entry.credentials);
         let mut invocations = Vec::new();
@@ -118,8 +84,6 @@ impl AuthChain {
     }
 }
 
-///
-///
 fn parse_credential(credentials: &SorobanCredentials) -> AuthCredential {
     match credentials {
         SorobanCredentials::SourceAccount => AuthCredential::SourceAccount,
@@ -145,7 +109,6 @@ fn parse_address_credential(creds: &SorobanAddressCredentials) -> AddressCredent
     }
 }
 
-///
 fn walk_invocation(
     invocation: &SorobanAuthorizedInvocation,
     depth: usize,
@@ -177,7 +140,7 @@ fn parse_function(function: &SorobanAuthorizedFunction, depth: usize) -> AuthInv
             }
         }
 
-        _ => AuthInvocation {
+        SorobanAuthorizedFunction::CreateContractHostFn(_) => AuthInvocation {
             depth,
             kind: AuthFunctionKind::CreateContract,
             contract: None,
@@ -189,7 +152,6 @@ fn parse_function(function: &SorobanAuthorizedFunction, depth: usize) -> AuthInv
     }
 }
 
-///
 pub fn scval_to_readable_string(val: &ScVal) -> String {
     match val {
         ScVal::Void => "void".to_string(),
@@ -202,12 +164,20 @@ pub fn scval_to_readable_string(val: &ScVal) -> String {
         ScVal::I64(i) => i.to_string(),
         ScVal::Timepoint(t) => t.0.to_string(),
         ScVal::Duration(d) => d.0.to_string(),
-        ScVal::U128(u) => (((u.hi as u128) << 64) | (u.lo as u128)).to_string(),
-        ScVal::I128(i) => (((i.hi as i128) << 64) | (i.lo as u128 as i128)).to_string(),
+        ScVal::U128(u) => ((u128::from(u.hi) << 64) | u128::from(u.lo)).to_string(),
+        ScVal::I128(i) => {
+            #[allow(clippy::cast_possible_wrap)]
+            let lo = u128::from(i.lo) as i128;
+            ((i128::from(i.hi) << 64) | lo).to_string()
+        },
         ScVal::Address(address) => scaddress_to_strkey(address),
         ScVal::Bytes(bytes) => format!(
             "0x{}",
-            bytes.iter().map(|b| format!("{b:02x}")).collect::<String>()
+            bytes.iter().fold(String::new(), |mut output, b| {
+                use std::fmt::Write;
+                let _ = write!(output, "{b:02x}");
+                output
+            })
         ),
         ScVal::Vec(Some(vec)) => {
             let items: Vec<String> = vec.iter().map(scval_to_readable_string).collect();
@@ -233,7 +203,6 @@ pub fn scval_to_readable_string(val: &ScVal) -> String {
     }
 }
 
-///
 pub(crate) fn scaddress_to_strkey(address: &ScAddress) -> String {
     match address {
         ScAddress::Account(AccountId(PublicKey::PublicKeyTypeEd25519(Uint256(bytes)))) => {

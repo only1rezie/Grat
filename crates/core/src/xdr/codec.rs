@@ -306,19 +306,16 @@ impl XdrCodec for LedgerKey {
     }
 }
 
-///
 pub fn decode_xdr_base64(xdr_base64: &str) -> GratResult<Vec<u8>> {
     STANDARD
         .decode(xdr_base64)
         .map_err(|e| GratError::XdrError(format!("Base64 decode failed: {e}")))
 }
 
-///
 pub fn encode_xdr_base64(bytes: &[u8]) -> String {
     STANDARD.encode(bytes)
 }
 
-///
 pub fn decode_tx_hash(hash_hex: &str) -> GratResult<[u8; 32]> {
     let bytes = hex_decode(hash_hex)
         .map_err(|e| GratError::XdrError(format!("Invalid tx hash hex: {e}")))?;

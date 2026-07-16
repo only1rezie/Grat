@@ -4,7 +4,6 @@ use crate::error::GratResult;
 use crate::types::report::{DiagnosticReport, FailureAttribution};
 use crate::xdr::codec::XdrCodec;
 
-///
 #[derive(Debug, Clone)]
 struct CallFrame {
     contract_address: String,
@@ -12,8 +11,6 @@ struct CallFrame {
     depth: usize,
 }
 
-///
-///
 pub fn attribute_failure(
     report: &mut DiagnosticReport,
     tx_data: &serde_json::Value,

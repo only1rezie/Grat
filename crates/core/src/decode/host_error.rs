@@ -260,7 +260,7 @@ mod tests {
     use super::*;
     use stellar_xdr::curr::{
         Hash, InvokeHostFunctionResult, OperationResult, OperationResultTr, TransactionResult,
-        TransactionResultResult, VecM,
+        TransactionResultResult,
     };
 
     fn make_tx_result(op_result: InvokeHostFunctionResult) -> TransactionResult {

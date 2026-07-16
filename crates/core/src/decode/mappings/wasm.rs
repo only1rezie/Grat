@@ -1,11 +1,5 @@
 use crate::types::report::Severity;
 
-///
-///
-///
-///
-///
-///
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WasmErrorDetail {
     pub code: u32,

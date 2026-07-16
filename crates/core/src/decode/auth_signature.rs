@@ -4,8 +4,6 @@ use stellar_xdr::curr::{
     SorobanCredentials,
 };
 
-///
-///
 pub fn decode_signature_bytes(bytes: &[u8]) -> String {
     if bytes.is_empty() {
         return "<invalid: empty signature>".to_string();
@@ -13,12 +11,13 @@ pub fn decode_signature_bytes(bytes: &[u8]) -> String {
     if bytes.len() != 64 {
         return format!("<invalid: expected 64 bytes, got {}>", bytes.len());
     }
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    bytes.iter().fold(String::new(), |mut output, b| {
+        use std::fmt::Write;
+        let _ = write!(output, "{b:02x}");
+        output
+    })
 }
 
-///
-///
-///
 pub fn decode_auth_entry_signatures(auth_entry_b64: &str) -> Vec<String> {
     let bytes = match STANDARD.decode(auth_entry_b64) {
         Ok(b) => b,
@@ -38,8 +37,6 @@ pub fn decode_auth_entry_signatures(auth_entry_b64: &str) -> Vec<String> {
     }
 }
 
-///
-///
 fn extract_signatures_from_scval(val: &ScVal) -> Vec<String> {
     match val {
         ScVal::Bytes(sc_bytes) => vec![decode_signature_bytes(sc_bytes.as_ref())],

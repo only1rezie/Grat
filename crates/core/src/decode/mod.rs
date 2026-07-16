@@ -25,11 +25,6 @@ use crate::types::report::DiagnosticReport;
 use crate::xdr::codec::XdrCodec;
 use stellar_xdr::curr::{ScVal, SorobanTransactionMetaExt, TransactionMeta, TransactionResult};
 
-///
-///
-///
-///
-///
 fn parse_v3_metadata(tx_data: &mut serde_json::Value) -> GratResult<()> {
     let mut total_fee = None;
     if let Some(result_b64) = tx_data.get("resultXdr").and_then(|r| r.as_str()) {

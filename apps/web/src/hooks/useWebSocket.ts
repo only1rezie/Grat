@@ -10,6 +10,10 @@ export interface ResourceUpdate {
   memory_used: number;
   cpu_limit: number;
   memory_limit: number;
+  read_bytes: number;
+  read_limit: number;
+  write_bytes: number;
+  write_limit: number;
 }
 
 export interface StateDiffEntry {

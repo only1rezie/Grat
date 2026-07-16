@@ -6,28 +6,18 @@ use crate::decode::auth::scaddress_to_strkey;
 use crate::error::GratResult;
 use crate::xdr::codec::XdrCodec;
 
-///
-///
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AddressWithNonce {
-    ///    
     pub address: String,
-    ///    
     pub nonce: i64,
 }
 
 impl AddressWithNonce {
-    ///    
-    ///    
-    ///    
-    ///    
     pub fn from_auth_entry_base64(b64: &str) -> GratResult<Option<Self>> {
         let entry = SorobanAuthorizationEntry::from_xdr_base64(b64)?;
         Ok(Self::from_entry(&entry))
     }
 
-    ///    
-    ///    
     pub fn from_entry(entry: &SorobanAuthorizationEntry) -> Option<Self> {
         match &entry.credentials {
             SorobanCredentials::SourceAccount => None,
@@ -44,7 +34,6 @@ impl AddressWithNonce {
 }
 
 impl fmt::Display for AddressWithNonce {
-    ///    
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Address: {}", self.address)?;
         write!(f, "Nonce:   {}", self.nonce)

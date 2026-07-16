@@ -1,6 +1,5 @@
 use crate::network::config::NetworkConfig;
 
-///
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum OutputFormat {
     #[default]
@@ -30,9 +29,6 @@ impl OutputFormat {
     }
 }
 
-///
-///
-///
 #[derive(Debug, Clone)]
 pub struct DecodeContext {
     pub network: NetworkConfig,
@@ -41,13 +37,11 @@ pub struct DecodeContext {
 }
 
 impl DecodeContext {
-    ///    
     pub fn builder() -> DecodeContextBuilder {
         DecodeContextBuilder::default()
     }
 }
 
-///
 #[derive(Debug, Default)]
 pub struct DecodeContextBuilder {
     network: Option<NetworkConfig>,
@@ -89,6 +83,7 @@ impl From<&NetworkConfig> for DecodeContextBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Network;
 
     #[test]
     fn builder_defaults_to_testnet() {
