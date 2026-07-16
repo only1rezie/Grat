@@ -1,4 +1,4 @@
-﻿# Storage Error Taxonomy
+# Storage Error Taxonomy
 # Category: Storage â€” errors related to ledger entry access and contract data operations.
 
 [category]
@@ -149,6 +149,8 @@ requires_upgrade = false
 description = "Retry on a fresh ledger state or report the transaction if the failure is reproducible"
 difficulty = "medium"
 requires_upgrade = false
+
+[[errors]]
 id = "host.storage.near_expiry"
 category = "storage"
 code = 4

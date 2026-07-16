@@ -373,7 +373,7 @@ mod tests {
         );
         assert_eq!(
             HostError::Crypto { code: 0 }.summary(),
-            "Invalid cryptographic input: a public key, signature, or hash input has the wrong length or format."
+            "Invalid cryptographic input: the supplied key, signature, or hash has an invalid format or length."
         );
         assert_eq!(
             HostError::Contract { code: 0 }.summary(),
