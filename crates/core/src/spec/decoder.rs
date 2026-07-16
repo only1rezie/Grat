@@ -76,7 +76,7 @@ pub fn decode_contract_spec(wasm_bytes: &[u8]) -> GratResult<ContractSpec> {
             ScSpecEntry::UdtErrorEnumV0(err_enum) => {
                 let enum_name = err_enum.name.to_string();
                 for case in err_enum.cases.iter() {
-                    let case_name = format!("{}::{}", enum_name, case.name.to_string());
+                    let case_name = format!("{}::{}", enum_name, case.name);
                     let doc = if case.doc.is_empty() {
                         None
                     } else {

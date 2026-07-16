@@ -24,12 +24,7 @@ pub fn generate_profile(
                     total_read_bytes += before.len() as u64 / 2;
                 }
             }
-            DiffChangeType::Deleted => {
-                if let Some(before) = &entry.before {
-                    total_read_bytes += before.len() as u64 / 2;
-                }
-            }
-            DiffChangeType::Unchanged => {
+            DiffChangeType::Deleted | DiffChangeType::Unchanged => {
                 if let Some(before) = &entry.before {
                     total_read_bytes += before.len() as u64 / 2;
                 }

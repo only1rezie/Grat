@@ -19,14 +19,12 @@ pub fn decode_signature_bytes(bytes: &[u8]) -> String {
 }
 
 pub fn decode_auth_entry_signatures(auth_entry_b64: &str) -> Vec<String> {
-    let bytes = match STANDARD.decode(auth_entry_b64) {
-        Ok(b) => b,
-        Err(_) => return vec!["<invalid: base64 decode failed>".to_string()],
+    let Ok(bytes) = STANDARD.decode(auth_entry_b64) else {
+        return vec!["<invalid: base64 decode failed>".to_string()];
     };
 
-    let entry = match SorobanAuthorizationEntry::from_xdr(&bytes, Limits::none()) {
-        Ok(e) => e,
-        Err(_) => return vec!["<invalid: xdr decode failed>".to_string()],
+    let Ok(entry) = SorobanAuthorizationEntry::from_xdr(&bytes, Limits::none()) else {
+        return vec!["<invalid: xdr decode failed>".to_string()];
     };
 
     match entry.credentials {

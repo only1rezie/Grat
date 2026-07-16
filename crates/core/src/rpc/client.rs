@@ -191,6 +191,7 @@ impl SorobanRpcClient {
         self.call("getLatestLedger", serde_json::json!({})).await
     }
 
+    #[allow(clippy::too_many_lines)]
     async fn call<T: for<'de> Deserialize<'de>>(
         &self,
         method: &'static str,

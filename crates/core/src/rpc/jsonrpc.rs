@@ -110,7 +110,7 @@ impl JsonRpcTransport {
     /// - Transport-level failures (connection refused, timeout, etc.)
     /// - HTTP 429 Too Many Requests
     /// - HTTP 5xx Server Errors (500–599)
-    /// Backoff follows `BASE_DELAY_MS × 2^attempt`, capped at `MAX_DELAY_MS`.
+    ///   Backoff follows `BASE_DELAY_MS × 2^attempt`, capped at `MAX_DELAY_MS`.
     pub async fn call<P, R>(&self, request: &JsonRpcRequest<P>) -> GratResult<R>
     where
         P: Serialize + std::fmt::Debug,

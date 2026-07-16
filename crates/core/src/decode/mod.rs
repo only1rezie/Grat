@@ -161,7 +161,7 @@ pub async fn decode_transaction_with_op_filter(
         base_tx_data.get("envelopeXdr").and_then(|v| v.as_str())
     {
         let envelope = <stellar_xdr::curr::TransactionEnvelope as crate::xdr::codec::XdrCodec>::from_xdr_base64(envelope_str)
-            .map_err(|e| crate::error::GratError::Internal(format!("Failed to decode envelope XDR: {}", e)))?;
+            .map_err(|e| crate::error::GratError::Internal(format!("Failed to decode envelope XDR: {e}")))?;
         match envelope {
             stellar_xdr::curr::TransactionEnvelope::TxV0(v0) => v0.tx.operations.len(),
             stellar_xdr::curr::TransactionEnvelope::Tx(v1) => v1.tx.operations.len(),
