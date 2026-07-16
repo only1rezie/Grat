@@ -73,13 +73,13 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
         if let Ok(tx_envelope) = TransactionEnvelope::from_xdr_base64(envelope_xdr_b64) {
             match tx_envelope {
                 TransactionEnvelope::Tx(v1) => {
-                    bid_fee = Some(v1.tx.fee as i64);
+                    bid_fee = Some(i64::from(v1.tx.fee));
                 }
                 TransactionEnvelope::TxFeeBump(fee_bump) => {
-                    bid_fee = Some(fee_bump.tx.fee as i64);
+                    bid_fee = Some(fee_bump.tx.fee);
                 }
                 TransactionEnvelope::TxV0(v0) => {
-                    bid_fee = Some(v0.tx.fee as i64);
+                    bid_fee = Some(i64::from(v0.tx.fee));
                 }
             }
         }
@@ -93,34 +93,29 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
     if let Some(resource_fee_obj) = tx_data.get("resourceFee").and_then(|v| v.as_object()) {
         non_refundable_fee = resource_fee_obj
             .get("totalNonRefundableResourceFeeCharged")
-            .and_then(|v| v.as_i64())
+            .and_then(serde_json::Value::as_i64)
             .unwrap_or(0);
         refundable_fee = resource_fee_obj
             .get("totalRefundableResourceFeeCharged")
-            .and_then(|v| v.as_i64())
+            .and_then(serde_json::Value::as_i64)
             .unwrap_or(0);
         rent_fee = resource_fee_obj
             .get("rentFeeCharged")
-            .and_then(|v| v.as_i64())
+            .and_then(serde_json::Value::as_i64)
             .unwrap_or(0);
         has_soroban_meta = true;
     } else if let Some(meta_xdr_b64) = tx_data.get("resultMetaXdr").and_then(|v| v.as_str()) {
-        if let Ok(tx_meta) = TransactionMeta::from_xdr_base64(meta_xdr_b64) {
-            match tx_meta {
-                TransactionMeta::V3(v3) => {
-                    if let Some(soroban_meta) = v3.soroban_meta {
-                        match soroban_meta.ext {
-                            stellar_xdr::curr::SorobanTransactionMetaExt::V0 => {}
-                            stellar_xdr::curr::SorobanTransactionMetaExt::V1(v1) => {
-                                non_refundable_fee = v1.total_non_refundable_resource_fee_charged;
-                                refundable_fee = v1.total_refundable_resource_fee_charged;
-                                rent_fee = v1.rent_fee_charged;
-                                has_soroban_meta = true;
-                            }
-                        }
+        if let Ok(TransactionMeta::V3(v3)) = TransactionMeta::from_xdr_base64(meta_xdr_b64) {
+            if let Some(soroban_meta) = v3.soroban_meta {
+                match soroban_meta.ext {
+                    stellar_xdr::curr::SorobanTransactionMetaExt::V0 => {}
+                    stellar_xdr::curr::SorobanTransactionMetaExt::V1(v1) => {
+                        non_refundable_fee = v1.total_non_refundable_resource_fee_charged;
+                        refundable_fee = v1.total_refundable_resource_fee_charged;
+                        rent_fee = v1.rent_fee_charged;
+                        has_soroban_meta = true;
                     }
                 }
-                _ => {}
             }
         }
     }
@@ -133,7 +128,7 @@ fn extract_fee_breakdown(tx_data: &serde_json::Value) -> FeeBreakdown {
 
     let inclusion_fee = tx_data
         .get("inclusionFee")
-        .and_then(|v| v.as_i64())
+        .and_then(serde_json::Value::as_i64)
         .unwrap_or(total_fee - resource_fee);
 
     FeeBreakdown {
@@ -160,8 +155,8 @@ fn extract_resource_summary(tx_data: &serde_json::Value) -> ResourceSummary {
             if event.get("type").and_then(|t| t.as_str()) == Some("budget") {
                 if let Some(data) = event.get("data") {
                     let category = data.get("category").and_then(|c| c.as_str()).unwrap_or("");
-                    let used = data.get("used").and_then(|u| u.as_u64()).unwrap_or(0);
-                    let limit = data.get("limit").and_then(|l| l.as_u64()).unwrap_or(0);
+                    let used = data.get("used").and_then(serde_json::Value::as_u64).unwrap_or(0);
+                    let limit = data.get("limit").and_then(serde_json::Value::as_u64).unwrap_or(0);
 
                     if category == "cpu" {
                         cpu_used = used;

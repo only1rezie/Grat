@@ -10,7 +10,7 @@ pub enum OutputFormat {
 }
 
 impl OutputFormat {
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse(s: &str) -> Self {
         match s {
             "json" => Self::Json,
             "compact" => Self::Compact,
@@ -115,7 +115,7 @@ mod tests {
             ("short", OutputFormat::Short),
             ("unknown", OutputFormat::Human),
         ] {
-            assert_eq!(OutputFormat::from_str(s), expected);
+            assert_eq!(OutputFormat::parse(s), expected);
             if s != "unknown" {
                 assert_eq!(expected.as_str(), s);
             }

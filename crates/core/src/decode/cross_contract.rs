@@ -27,14 +27,8 @@ pub fn attribute_failure(
     let mut failure: Option<CallFrame> = None;
 
     for event_b64 in events_b64 {
-        let b64_str = match event_b64.as_str() {
-            Some(s) => s,
-            None => continue,
-        };
-        let event = match DiagnosticEvent::from_xdr_base64(b64_str) {
-            Ok(e) => e,
-            Err(_) => continue,
-        };
+        let Some(b64_str) = event_b64.as_str() else { continue };
+        let Ok(event) = DiagnosticEvent::from_xdr_base64(b64_str) else { continue };
 
         process_event(&event, &mut call_stack, &mut failure);
     }
@@ -58,9 +52,7 @@ fn process_event(
     call_stack: &mut Vec<CallFrame>,
     failure: &mut Option<CallFrame>,
 ) {
-    let v0 = match &event.event.body {
-        ContractEventBody::V0(v) => v,
-    };
+    let ContractEventBody::V0(v0) = &event.event.body;
 
     let contract_address = match &event.event.contract_id {
         Some(hash) => hash_to_string(hash),
@@ -68,7 +60,7 @@ fn process_event(
     };
 
     let topics: Vec<String> = v0.topics.iter().filter_map(scval_to_string).collect();
-    let first_topic = topics.first().map(|s| s.as_str()).unwrap_or("");
+    let first_topic = topics.first().map_or("", String::as_str);
 
     match first_topic {
         // fn_call / fn_return are emitted by the host for every cross-contract
@@ -130,7 +122,11 @@ fn hash_to_string(hash: &Hash) -> String {
 }
 
 fn bytes_to_hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    bytes.iter().fold(String::new(), |mut output, b| {
+        use std::fmt::Write;
+        let _ = write!(output, "{b:02x}");
+        output
+    })
 }
 
 fn scval_to_string(val: &ScVal) -> Option<String> {

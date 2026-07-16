@@ -49,11 +49,13 @@ fn scval_to_string(val: &ScVal) -> Option<String> {
         ScVal::Void => Some("Void".to_string()),
         ScVal::Bool(b) => Some(b.to_string()),
         ScVal::U128(u) => {
-            let num = ((u.hi as u128) << 64) | (u.lo as u128);
+            let num = (u128::from(u.hi) << 64) | u128::from(u.lo);
             Some(num.to_string())
         }
         ScVal::I128(i) => {
-            let num = ((i.hi as i128) << 64) | (i.lo as u128 as i128);
+            #[allow(clippy::cast_possible_wrap)]
+            let lo = u128::from(i.lo) as i128;
+            let num = (i128::from(i.hi) << 64) | lo;
             Some(num.to_string())
         }
         ScVal::Vec(Some(v)) => {
@@ -69,7 +71,7 @@ fn scval_to_string(val: &ScVal) -> Option<String> {
                 .map(|entry| {
                     let k = scval_to_string(&entry.key).unwrap_or_else(|| "?".to_string());
                     let v = scval_to_string(&entry.val).unwrap_or_else(|| "?".to_string());
-                    format!("{}: {}", k, v)
+                    format!("{k}: {v}")
                 })
                 .collect();
             Some(format!("{{{}}}", items.join(", ")))
@@ -150,7 +152,7 @@ fn deepest_error_event(events: &[DiagnosticEvent]) -> Option<DiagnosticErrorEven
                 };
                 let is_deeper = deepest
                     .as_ref()
-                    .map_or(true, |current: &DiagnosticErrorEvent| {
+                    .is_none_or(|current: &DiagnosticErrorEvent| {
                         candidate.depth >= current.depth
                     });
 
@@ -211,6 +213,7 @@ fn add_deepest_error_root_cause(report: &mut DiagnosticReport, error_event: &Dia
 }
 
 #[allow(irrefutable_let_patterns)]
+#[allow(clippy::too_many_lines)]
 fn analyze_diagnostic_event(report: &mut DiagnosticReport, event: &DiagnosticEvent) {
     if let ContractEventBody::V0(v0) = &event.event.body {
         let topics: Vec<String> = v0.topics.iter().filter_map(scval_to_string).collect();
@@ -315,11 +318,11 @@ fn analyze_diagnostic_event(report: &mut DiagnosticReport, event: &DiagnosticEve
         if !report.detailed_explanation.contains(&topics_str) {
             if report.detailed_explanation.is_empty() {
                 report.detailed_explanation =
-                    format!("Diagnostic events trace:\n- [{}]", topics_str);
+                    format!("Diagnostic events trace:\n- [{topics_str}]");
             } else {
                 report
                     .detailed_explanation
-                    .push_str(&format!("\n- [{}]", topics_str));
+                    .push_str(&format!("\n- [{topics_str}]"));
             }
         }
     }

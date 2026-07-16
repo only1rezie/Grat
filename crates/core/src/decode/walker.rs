@@ -15,7 +15,7 @@ pub enum DiagnosticEventKind {
 }
 
 impl DiagnosticEventKind {
-    fn from_contract_event_type(t: &ContractEventType) -> Self {
+    fn from_contract_event_type(t: ContractEventType) -> Self {
         match t {
             ContractEventType::Contract => Self::Contract,
             ContractEventType::System => Self::System,
@@ -125,13 +125,13 @@ impl DiagnosticEventWalker {
         let inner = &raw.event;
 
         // Derive kind from the protocol-level discriminant.
-        let kind = DiagnosticEventKind::from_contract_event_type(&inner.type_);
+        let kind = DiagnosticEventKind::from_contract_event_type(inner.type_.clone());
 
         // Resolve optional contract address to a strkey string.
         let contract_id = inner
             .contract_id
             .as_ref()
-            .map(|hash| Self::hash_to_strkey(hash));
+            .map(Self::hash_to_strkey);
 
         // Extract topics and data from the event body.
         match &inner.body {

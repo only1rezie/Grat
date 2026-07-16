@@ -33,15 +33,13 @@ fn parse_v3_metadata(tx_data: &mut serde_json::Value) -> GratResult<()> {
         }
     }
 
-    let meta_b64 = match tx_data.get("resultMetaXdr").and_then(|r| r.as_str()) {
-        Some(s) => s.to_string(),
-        None => {
-            if let Some(total_fee) = total_fee {
-                tx_data["inclusionFee"] = serde_json::json!(total_fee);
-            }
-            return Ok(());
+    let Some(meta_b64_str) = tx_data.get("resultMetaXdr").and_then(|r| r.as_str()) else {
+        if let Some(total_fee) = total_fee {
+            tx_data["inclusionFee"] = serde_json::json!(total_fee);
         }
+        return Ok(());
     };
+    let meta_b64 = meta_b64_str.to_string();
 
     let meta =
         TransactionMeta::from_xdr_base64(&meta_b64).map_err(|e| GratError::XdrDecodingFailed {
@@ -52,14 +50,11 @@ fn parse_v3_metadata(tx_data: &mut serde_json::Value) -> GratResult<()> {
     let mut resource_fee = 0;
 
     if let TransactionMeta::V3(v3) = meta {
-        let soroban_meta = match v3.soroban_meta {
-            Some(s) => s,
-            None => {
-                if let Some(total_fee) = total_fee {
-                    tx_data["inclusionFee"] = serde_json::json!(total_fee);
-                }
-                return Ok(());
+        let Some(soroban_meta) = v3.soroban_meta else {
+            if let Some(total_fee) = total_fee {
+                tx_data["inclusionFee"] = serde_json::json!(total_fee);
             }
+            return Ok(());
         };
 
         if !soroban_meta.events.is_empty() {
