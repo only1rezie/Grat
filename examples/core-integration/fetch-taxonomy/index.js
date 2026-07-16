@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs').promises;
-const path = require('path');
+const { readFile, writeFile } = require('node:fs/promises');
+const path = require('node:path');
 const toml = require('@iarna/toml');
 
 function sanitizeText(value) {
@@ -72,12 +72,59 @@ function sanitizeAndNormalize(value, key = '') {
 }
 
 async function buildTaxonomyJson({ inputPath, outputPath }) {
-  const input = await fs.readFile(inputPath, 'utf8');
-  const parsed = toml.parse(input);
+  let input;
+  try {
+    input = await readFile(inputPath, 'utf8');
+  } catch (error) {
+    throw new Error(formatReadError(error, inputPath));
+  }
+
+  let parsed;
+  try {
+    parsed = toml.parse(input);
+  } catch (error) {
+    throw new Error(`Parse Error: The TOML file exists but contains invalid syntax:\n  ${error.message}`);
+  }
+
   const sanitized = sanitizeAndNormalize(parsed);
   const serialized = JSON.stringify(sanitized, null, 2) + '\n';
-  await fs.writeFile(outputPath, serialized, 'utf8');
+
+  try {
+    await writeFile(outputPath, serialized, 'utf8');
+  } catch (error) {
+    throw new Error(
+      `Unexpected file system error while writing the taxonomy JSON file:\n` +
+        `  Code: ${error.code || 'unknown'}\n` +
+        `  Message: ${error.message}`
+    );
+  }
+
   return serialized;
+}
+
+function formatReadError(error, inputPath) {
+  if (error.code === 'ENOENT') {
+    return (
+      `Critical Error: The core taxonomy TOML file could not be located at the expected path:\n` +
+      `  ${inputPath}\n\n` +
+      `Please ensure the crates/core submodule is initialized:\n` +
+      `  git submodule update --init --recursive`
+    );
+  }
+
+  if (error.code === 'EACCES') {
+    return (
+      `Permission Error: Cannot read the taxonomy TOML file due to a permission restriction:\n` +
+      `  ${inputPath}\n\n` +
+      `Verify file permissions or check if another process has locked the file.`
+    );
+  }
+
+  return (
+    `Unexpected file system error while reading the taxonomy TOML file:\n` +
+    `  Code: ${error.code || 'unknown'}\n` +
+    `  Message: ${error.message}`
+  );
 }
 
 async function main() {
@@ -102,4 +149,5 @@ module.exports = {
   normalizeErrorCode,
   sanitizeAndNormalize,
   buildTaxonomyJson,
+  formatReadError,
 };
