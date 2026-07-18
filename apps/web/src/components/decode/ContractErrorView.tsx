@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import contractTaxonomy from "../lib/contract-taxonomy.json";
+import contractTaxonomy from "../../lib/contract-taxonomy.json";
 
 interface TaxonomyEntry {
   code: number;
