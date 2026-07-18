@@ -1,4 +1,3 @@
-
 use crate::error::GratError;
 use std::convert::TryFrom;
 use std::fmt;
@@ -9,7 +8,6 @@ const CONTRACT_ID_LEN: usize = 56;
 pub struct ContractId(String);
 
 impl ContractId {
-    
     pub fn new(raw: impl Into<String>) -> Result<Self, GratError> {
         let raw = raw.into();
         validate_contract_id(&raw)?;
@@ -69,10 +67,7 @@ fn validate_contract_id(raw: &str) -> Result<(), GratError> {
     }
 
     stellar_strkey::Contract::from_string(raw).map_err(|e| {
-        GratError::InvalidContractId(format!(
-            "'{}' is not valid StrKey-encoded data: {}",
-            raw, e
-        ))
+        GratError::InvalidContractId(format!("'{}' is not valid StrKey-encoded data: {}", raw, e))
     })?;
 
     Ok(())
@@ -109,10 +104,13 @@ mod tests {
 
     #[test]
     fn rejects_bad_checksum() {
-        
         let mut raw = valid_contract_id();
         let last = raw.len() - 1;
-        let corrupted_char = if raw.as_bytes()[last] == b'A' { 'B' } else { 'A' };
+        let corrupted_char = if raw.as_bytes()[last] == b'A' {
+            'B'
+        } else {
+            'A'
+        };
         raw.replace_range(last..last + 1, &corrupted_char.to_string());
         assert!(ContractId::new(raw).is_err());
     }
@@ -120,7 +118,7 @@ mod tests {
     #[test]
     fn rejects_invalid_base32_char() {
         let mut raw = valid_contract_id();
-        raw.replace_range(10..11, "0"); 
+        raw.replace_range(10..11, "0");
         assert!(ContractId::new(raw).is_err());
     }
 
