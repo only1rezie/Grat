@@ -8,8 +8,9 @@
 
 use crate::decode::auth::scaddress_to_strkey;
 use serde_json::{json, Map, Value};
+use std::collections::HashSet;
 use stellar_xdr::curr::{
-    ContractExecutable, Int128Parts, Int256Parts, ScContractInstance, ScError, ScErrorCode,
+    ContractExecutable, Int128Parts, Int256Parts, ScContractInstance, ScError, ScErrorCode, ScMap,
     ScVal, UInt128Parts, UInt256Parts,
 };
 
@@ -66,15 +67,7 @@ fn convert(val: &ScVal, depth: usize) -> Value {
             Value::Array(items.iter().map(|item| convert(item, depth + 1)).collect())
         }
         ScVal::Vec(None) => Value::Null,
-        ScVal::Map(Some(entries)) => {
-            let mut obj = Map::with_capacity(entries.len());
-            for entry in entries.iter() {
-                let key = scval_key_to_string(&entry.key, depth + 1);
-                let value = convert(&entry.val, depth + 1);
-                obj.insert(key, value);
-            }
-            Value::Object(obj)
-        }
+        ScVal::Map(Some(entries)) => scmap_to_json(entries, depth + 1),
         ScVal::Map(None) => Value::Null,
         ScVal::Address(address) => json!(scaddress_to_strkey(address)),
         ScVal::ContractInstance(instance) => contract_instance_to_json(instance, depth),
@@ -83,13 +76,52 @@ fn convert(val: &ScVal, depth: usize) -> Value {
     }
 }
 
-/// Renders a map key as a JSON object key. Keys that convert to a plain JSON
-/// string (symbols, strings, addresses, ...) are used as-is; everything else
-/// (numbers, bools, nested containers) falls back to its compact JSON text so
-/// the map can still be losslessly represented as a `serde_json::Value::Object`.
-fn scval_key_to_string(key: &ScVal, depth: usize) -> String {
-    match convert(key, depth) {
-        Value::String(s) => s,
+/// Renders an `ScMap` as JSON, preferring a plain `{key: value}` object.
+///
+/// `ScVal` keys are arbitrary (numbers, bools, nested containers, ...) but a
+/// `serde_json::Value::Object` only accepts string keys, so each key is
+/// stringified: plain JSON strings (symbols, strings, addresses, ...) are
+/// used as-is, everything else falls back to its compact JSON text (e.g. a
+/// `U32(7)` key becomes `"7"`). That stringification is lossy — distinct
+/// `ScVal` keys such as `U32(7)` and `String("7")`, or `Bool(true)` and
+/// `String("true")`, can collide on the same JSON key. To avoid silently
+/// dropping entries on collision, if *any* two keys in the map stringify to
+/// the same value, the whole map instead renders as a lossless
+/// `[{"key": ..., "value": ...}, ...]` array, where both `key` and `value`
+/// are full recursive JSON (not stringified).
+fn scmap_to_json(entries: &ScMap, depth: usize) -> Value {
+    let mut converted: Vec<(String, Value, Value)> = Vec::with_capacity(entries.len());
+    for entry in entries.iter() {
+        let key_json = convert(&entry.key, depth);
+        let key_string = key_string_from_value(&key_json);
+        let value_json = convert(&entry.val, depth);
+        converted.push((key_string, key_json, value_json));
+    }
+
+    let mut seen = HashSet::with_capacity(converted.len());
+    let has_collision = converted
+        .iter()
+        .any(|(key, _, _)| !seen.insert(key.clone()));
+
+    if has_collision {
+        Value::Array(
+            converted
+                .into_iter()
+                .map(|(_, key, value)| json!({ "key": key, "value": value }))
+                .collect(),
+        )
+    } else {
+        let mut obj = Map::with_capacity(converted.len());
+        for (key, _, value) in converted {
+            obj.insert(key, value);
+        }
+        Value::Object(obj)
+    }
+}
+
+fn key_string_from_value(value: &Value) -> String {
+    match value {
+        Value::String(s) => s.clone(),
         other => other.to_string(),
     }
 }
@@ -122,15 +154,7 @@ fn contract_instance_to_json(instance: &ScContractInstance, depth: usize) -> Val
     };
 
     let storage = match &instance.storage {
-        Some(entries) => {
-            let mut obj = Map::with_capacity(entries.len());
-            for entry in entries.iter() {
-                let key = scval_key_to_string(&entry.key, depth + 1);
-                let value = convert(&entry.val, depth + 1);
-                obj.insert(key, value);
-            }
-            Value::Object(obj)
-        }
+        Some(entries) => scmap_to_json(entries, depth + 1),
         None => Value::Null,
     };
 
@@ -282,7 +306,10 @@ mod tests {
 
     #[test]
     fn empty_vec_and_absent_vec_are_distinguishable() {
-        assert_eq!(scval_to_json(&ScVal::Vec(Some(ScVec(vec![].try_into().unwrap())))), json!([]));
+        assert_eq!(
+            scval_to_json(&ScVal::Vec(Some(ScVec(vec![].try_into().unwrap())))),
+            json!([])
+        );
         assert_eq!(scval_to_json(&ScVal::Vec(None)), Value::Null);
     }
 
@@ -306,6 +333,62 @@ mod tests {
         let result = scval_to_json(&m);
         assert_eq!(result["name"], json!("grat"));
         assert_eq!(result["7"], json!(true));
+    }
+
+    #[test]
+    fn map_with_colliding_stringified_keys_falls_back_to_entries_array() {
+        // ScVal::U32(7) and ScVal::String("7") both stringify to the JSON
+        // key "7". Silently `obj.insert`-ing both would drop one entry, so
+        // the whole map must fall back to a lossless entries array instead.
+        let m = ScVal::Map(Some(ScMap(
+            vec![
+                ScMapEntry {
+                    key: ScVal::U32(7),
+                    val: ScVal::Symbol(ScSymbol(
+                        StringM::try_from(b"from_number".to_vec()).unwrap(),
+                    )),
+                },
+                ScMapEntry {
+                    key: ScVal::String(ScString(StringM::try_from(b"7".to_vec()).unwrap())),
+                    val: ScVal::Symbol(ScSymbol(
+                        StringM::try_from(b"from_string".to_vec()).unwrap(),
+                    )),
+                },
+            ]
+            .try_into()
+            .unwrap(),
+        )));
+
+        let result = scval_to_json(&m);
+        let entries = result.as_array().expect("collision falls back to array");
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0]["key"], json!(7));
+        assert_eq!(entries[0]["value"], json!("from_number"));
+        assert_eq!(entries[1]["key"], json!("7"));
+        assert_eq!(entries[1]["value"], json!("from_string"));
+    }
+
+    #[test]
+    fn non_colliding_map_is_still_rendered_as_object() {
+        let m = ScVal::Map(Some(ScMap(
+            vec![
+                ScMapEntry {
+                    key: ScVal::U32(1),
+                    val: ScVal::Bool(true),
+                },
+                ScMapEntry {
+                    key: ScVal::U32(2),
+                    val: ScVal::Bool(false),
+                },
+            ]
+            .try_into()
+            .unwrap(),
+        )));
+
+        let result = scval_to_json(&m);
+        assert!(result.is_object());
+        assert_eq!(result["1"], json!(true));
+        assert_eq!(result["2"], json!(false));
     }
 
     #[test]
@@ -477,5 +560,32 @@ mod tests {
             .unwrap()
             .starts_with("0x"));
         assert_eq!(result["storage"]["k"], json!(9));
+    }
+
+    #[test]
+    fn contract_instance_storage_collision_falls_back_to_entries_array() {
+        let instance = ScVal::ContractInstance(ScContractInstance {
+            executable: ContractExecutable::StellarAsset,
+            storage: Some(ScMap(
+                vec![
+                    ScMapEntry {
+                        key: ScVal::U32(1),
+                        val: ScVal::U32(100),
+                    },
+                    ScMapEntry {
+                        key: ScVal::String(ScString(StringM::try_from(b"1".to_vec()).unwrap())),
+                        val: ScVal::U32(200),
+                    },
+                ]
+                .try_into()
+                .unwrap(),
+            )),
+        });
+
+        let result = scval_to_json(&instance);
+        let storage = result["storage"]
+            .as_array()
+            .expect("colliding storage keys fall back to array");
+        assert_eq!(storage.len(), 2);
     }
 }
