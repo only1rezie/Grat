@@ -176,7 +176,7 @@ export default function ContractErrorView() {
               Detailed Explanation
             </h4>
             <p className="text-slate-400 text-sm leading-relaxed">
-              This is a custom contract-defined error code. Custom error codes are defined by the contract author inside their `#[contracterror]` enum. To map this code to its name, you need the contract's WASM specification or source code.
+              This is a custom contract-defined error code. Custom error codes are defined by the contract author inside their {"`#[contracterror]`"} enum. To map this code to its name, you need the contract{"'s"} WASM specification or source code.
             </p>
           </div>
 
@@ -188,7 +188,7 @@ export default function ContractErrorView() {
               <ul className="space-y-2">
                 <li className="text-sm text-slate-300 flex items-start gap-2">
                   <span className="text-red-400 mt-1">•</span>
-                  <span>A business logic requirement or assertion in the contract was not met.</span>
+                  <span>A business logic requirement or assertion in the contract{"'s"} code was not met.</span>
                 </li>
               </ul>
             </div>
@@ -200,7 +200,7 @@ export default function ContractErrorView() {
               <ul className="space-y-2">
                 <li className="text-sm text-slate-300 flex items-start gap-2">
                   <span className="text-emerald-400 mt-1">✓</span>
-                  <span>Locate the source code of the contract and find its `#[contracterror]` enum.</span>
+                  <span>Locate the source code of the contract and find its {"`#[contracterror]`"} enum.</span>
                 </li>
                 <li className="text-sm text-slate-300 flex items-start gap-2">
                   <span className="text-emerald-400 mt-1">✓</span>
