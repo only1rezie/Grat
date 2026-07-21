@@ -214,7 +214,8 @@ mod tests {
         wasm.push(custom_payload.len() as u8);
         wasm.extend(custom_payload);
 
-        let contract_id = "CA3D5KTHBN6TOVTTTA74S4O4O4O4O4O4O4O4O4O4O4O4O4O4O4O4O4O4";
+        let contract_id_str = stellar_strkey::Contract([7u8; 32]).to_string();
+        let contract_id = &contract_id_str;
         let cache = CacheStore::default_location().unwrap();
         let cache_key = format!("{contract_id}_spec");
         cache
