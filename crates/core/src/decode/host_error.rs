@@ -75,88 +75,97 @@ impl HostError {
         match self {
             Self::Budget { code } => {
                 if let Some(detail) = crate::decode::mappings::budget::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("Budget error (code {code}): the transaction exceeded an allocated resource budget.")
+    format!("[BUDGET] {}", detail.name)
+} else {
+    format!("[BUDGET] Code {}", code)
+}
                 }
             }
             Self::Storage { code } => {
-                if let Some(detail) = crate::decode::mappings::storage::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("Storage error (code {code}): an unexpected error occurred while accessing contract data.")
+                  if let Some(detail) = crate::decode::mappings::storage::lookup(*code) {
+    format!("[STORAGE] {}", detail.name)
+} else {
+    format!("[STORAGE] Code {}", code)
+}
+        
                 }
             }
             Self::Auth { code } => {
                 if let Some(detail) = crate::decode::mappings::auth::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!(
-                        "Auth error (code {code}): an authorization requirement was not satisfied."
+    format!("[AUTH] {}", detail.name)
+} else {
+    format!("[AUTH] Code {}", code)
+}
                     )
                 }
             }
             Self::Context { code } => {
                 if let Some(detail) = crate::decode::mappings::context::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("Context error (code {code}): the contract was invoked in an invalid execution context.")
+    format!("[CONTEXT] {}", detail.name)
+} else {
+    format!("[CONTEXT] Code {}", code)
+                }
                 }
             }
             Self::Value { code } => {
                 if let Some(detail) = crate::decode::mappings::value::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("Value error (code {code}): a host value could not be converted or validated.")
+    format!("[VALUE] {}", detail.name)
+} else {
+    format!("[VALUE] Code {}", code)
+                }
                 }
             }
             Self::Object { code } => {
                 if let Some(detail) = crate::decode::mappings::object::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("Object error (code {code}): an operation on a host object (vector, map, bytes) failed.")
+    format!("[OBJECT] {}", detail.name)
+} else {
+    format!("[OBJECT] Code {}", code)
+                }
                 }
             }
             Self::Crypto { code } => {
                 if let Some(detail) = crate::decode::mappings::crypto::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("Crypto error (code {code}): a cryptographic operation failed.")
+    format!("[CRYPTO] {}", detail.name)
+} else {
+    format!("[CRYPTO] Code {}", code)
+                }
                 }
             }
             Self::Contract { code } => {
                 if let Some(detail) = crate::decode::mappings::contract::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("Contract error (code {code}): the contract returned a non-zero error code — run with --resolve to identify it.")
+    format!("[CONTRACT] {}", detail.name)
+} else {
+    format!("[CONTRACT] Code {}", code)
+                }
                 }
             }
             Self::Wasm { code } => {
                 if let Some(detail) = crate::decode::mappings::wasm::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("WASM error (code {code}): the contract's WASM module could not be loaded or executed.")
+    format!("[WASM] {}", detail.name)
+} else {
+    format!("[WASM] Code {}", code)
+}
                 }
             }
             Self::Events { code } => {
                 if let Some(detail) = crate::decode::mappings::events::lookup(*code) {
-                    detail.summary.to_string()
-                } else {
-                    format!("Events error (code {code}): an error occurred during event emission.")
+    format!("[EVENTS] {}", detail.name)
+} else {
+    format!("[EVENTS] Code {}", code)
+}
                 }
             }
             Self::ContractSpecific { contract_id, code } => {
-                let contract = contract_id.as_deref().unwrap_or("unknown contract");
-                format!(
-                    "Contract-specific error {code} from {contract}: run with --resolve to look up the error name from the contract's WASM metadata."
-                )
+            let contract = contract_id.as_deref().unwrap_or("unknown");
+format!("[CONTRACT] {} ({})", contract, code)
+
+                   )
             }
             Self::Unknown {
                 type_code,
                 sub_code,
             } => {
-                format!(
-                    "Unknown error (type {type_code}, sub-code {sub_code}): this error code is not recognised — the network may be running a newer protocol version."
+                format!("[UNKNOWN] {}:{}", type_code, sub_code)
                 )
             }
         }
@@ -440,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn test_summary_under_120_chars() {
+    fn test_summary_under_80_chars() {
         let errors = vec![
             HostError::Budget { code: 0 },
             HostError::Storage { code: 0 },
@@ -456,7 +465,7 @@ mod tests {
         for err in errors {
             let summary = err.summary();
             assert!(
-                summary.len() <= 120,
+                summary.len() <= 80,
                 "Summary too long ({} chars) for {:?}: {}",
                 summary.len(),
                 err,
