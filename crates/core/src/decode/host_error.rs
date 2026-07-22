@@ -522,3 +522,11 @@ mod tests {
         ));
     }
 }
+
+Self::Budget { code } => {
+    if let Some(detail) = crate::decode::mappings::budget::lookup(*code) {
+        format!("[BUDGET] {}", detail.name)
+    } else {
+        format!("[BUDGET] Code {}", code)
+    }
+}
