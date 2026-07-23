@@ -436,7 +436,7 @@ assert!(s.contains('7'));
     fn test_summary_unknown_codes_fallback() {
         let s = HostError::Budget { code: 99 }.summary();
         assert!(s.contains("99"));
-        assert!(s.contains("Budget") || s.contains("budget"));
+        assert!(s.contains("BUDGET"));
     }
 
     #[test]
