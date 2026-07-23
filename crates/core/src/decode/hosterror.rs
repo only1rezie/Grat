@@ -408,7 +408,7 @@ mod tests {
         assert!(s.contains("CABC123"));
         assert!(s.contains('3'));
     }
-    }
+    
 
     #[test]
     fn test_summary_contract_specific_no_id() {
