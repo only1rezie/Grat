@@ -163,9 +163,10 @@ impl HostError {
             sub_code,
         } => {
             format!("[UNKNOWN] {}:{}", type_code, sub_code)
-       }
+      }
     }
- }
+  }
+}
 #[derive(Debug, Clone)]
 pub struct ClassifiedError {
     pub category: ErrorCategory,
