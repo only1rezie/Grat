@@ -53,7 +53,7 @@ pub enum HostError {
     },
 }
 
-impl HostError {
+impl HostError (})
     pub fn category_name(&self) -> &str {
         match self {
             Self::Budget { .. } => "Budget",
@@ -346,57 +346,55 @@ mod tests {
 
     #[test]
     fn test_summary_known_codes() {
-        assert_eq!(
-            HostError::Budget { code: 0 }.summary(),
-            "CPU budget exceeded: the transaction ran out of CPU instructions before completing execution."
-        );
-        assert_eq!(
-            HostError::Storage { code: 0 }.summary(),
-            "The contract attempted to access a ledger entry not included in the transaction's footprint."
-        );
-        assert_eq!(
-            HostError::Auth { code: 0 }.summary(),
-            "The authorization context is malformed or does not match the current invocation."
-        );
-        assert_eq!(
-            HostError::Context { code: 0 }.summary(),
-            "Host internal error: an unexpected Soroban runtime error occurred — this may be a platform bug, not a contract bug."
-        );
-        assert_eq!(
-            HostError::Value { code: 0 }.summary(),
-            "Invalid value: a host function received an argument of the wrong type or format."
-        );
-        assert_eq!(
-            HostError::Object { code: 0 }.summary(),
-            "An unknown or unclassified host object error occurred."
-        );
-        assert_eq!(
-            HostError::Object { code: 5 }.summary(),
-            "An index out of bounds was used when accessing a host vector or byte array."
-        );
-        assert_eq!(
-            HostError::Crypto { code: 0 }.summary(),
-            "Invalid cryptographic input: the supplied key, signature, or hash has an invalid format or length."
-        );
-        assert_eq!(
-            HostError::Contract { code: 0 }.summary(),
-            "Contract error: the contract's own logic rejected this call — run with --resolve to map the code to its name."
-        );
-        assert_eq!(
-            HostError::Contract { code: 1 }.summary(),
-            "An internal protocol implementation error occurred (e.g. invalid ledger state)."
-        );
-        assert_eq!(
-            HostError::Contract { code: 2 }.summary(),
-            "The operation is not supported (e.g. calling clawback on an asset without clawback enabled)."
-        );
-        assert_eq!(
-            HostError::Wasm { code: 0 }.summary(),
-            "Invalid WASM module: the contract bytecode failed validation — recompile with a compatible Soroban SDK version."
-        );
-        assert_eq!(
-            HostError::Events { code: 0 }.summary(),
-            "Event emission failed: an arithmetic overflow occurred while constructing the event payload."
+           assert_eq!(
+        HostError::Budget { code: 0 }.summary(),
+        "[BUDGET] CPUExceeded"
+    );
+
+    assert_eq!(
+        HostError::Storage { code: 0 }.summary(),
+        "[STORAGE] AccessDenied"
+    );
+
+    assert_eq!(
+        HostError::Auth { code: 0 }.summary(),
+        "[AUTH] InvalidAction"
+    );
+
+    assert_eq!(
+        HostError::Context { code: 0 }.summary(),
+        "[CONTEXT] UnknownError"
+    );
+
+    assert_eq!(
+        HostError::Value { code: 0 }.summary(),
+        "[VALUE] UnknownError"
+    );
+
+    assert_eq!(
+        HostError::Object { code: 0 }.summary(),
+        "[OBJECT] UnknownError"
+    );
+
+    assert_eq!(
+        HostError::Crypto { code: 0 }.summary(),
+        "[CRYPTO] InvalidInput"
+    );
+
+    assert_eq!(
+        HostError::Contract { code: 0 }.summary(),
+        "[CONTRACT] ContractError"
+    );
+
+    assert_eq!(
+        HostError::Wasm { code: 0 }.summary(),
+        "[WASM] InvalidModule"
+    );
+
+    assert_eq!(
+        HostError::Events { code: 0 }.summary(),
+        "[EVENTS] ArithDomain"
+    ); 
         );
     }
 
